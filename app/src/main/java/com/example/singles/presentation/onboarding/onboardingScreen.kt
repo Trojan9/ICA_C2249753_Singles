@@ -37,7 +37,9 @@ fun OnboardingScreen(
                 }
             }
             HorizontalPager(state = pagerState) { index ->
-                OnboardingPage(page = pages[index],onGetStartedClick=onGetStartedClick)
+                OnboardingPage(page = pages[index],
+                    pagerState = pagerState,
+                    buttonsState=buttonsState,onGetStartedClick=onGetStartedClick)
             }
         }
     }
