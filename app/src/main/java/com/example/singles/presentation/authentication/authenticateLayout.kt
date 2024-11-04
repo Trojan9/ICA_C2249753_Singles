@@ -1,4 +1,4 @@
-package com.example.singles.presentation.registration
+package com.example.singles.presentation.authentication
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*

@@ -4,6 +4,7 @@ plugins {
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
     id("kotlin-parcelize")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -116,4 +117,17 @@ dependencies {
     implementation("androidx.room:room-runtime:$roomVersion")
     kapt("androidx.room:room-compiler:$roomVersion")
     implementation("androidx.room:room-ktx:2.5.2")
+
+    // Import the Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+
+
+    // TODO: Add the dependencies for Firebase products you want to use
+    // When using the BoM, don't specify versions in Firebase dependencies
+    implementation("com.google.firebase:firebase-analytics")
+    implementation ("androidx.compose.material:material-icons-extended:1.7.5")
+    implementation("com.google.firebase:firebase-auth-ktx:23.1.0")
+    implementation ("com.google.firebase:firebase-firestore-ktx:24.4.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7") // Ensure you have ViewModel support for Jetpack Compose
+
 }

@@ -21,11 +21,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.example.singles.R
 
 @Composable
-fun UploadPhotosPage() {
+fun UploadPhotosPage(navController: NavController, onContinueClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -73,7 +74,7 @@ fun UploadPhotosPage() {
 
         // Continue Button
         Button(
-            onClick = { /* Implement action to continue */ },
+            onClick = { onContinueClick() },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBB296)),
             modifier = Modifier
                 .fillMaxWidth()

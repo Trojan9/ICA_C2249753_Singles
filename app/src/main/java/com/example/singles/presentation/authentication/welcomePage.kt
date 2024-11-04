@@ -1,15 +1,14 @@
-package com.example.singles.presentation.registration
+package com.example.singles.presentation.authentication
 
-import androidx.compose.foundation.background
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -19,9 +18,9 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WelcomePage(onAgree: () -> Unit) {
+fun WelcomePage(authViewModel:AuthViewModel,onAgree: () -> Unit) {
     var showDialog by remember { mutableStateOf(false) }
-
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -121,15 +120,23 @@ fun WelcomePage(onAgree: () -> Unit) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
                 title = {
-                    Text(text = "Cancel Confirmation", fontSize = 20.sp, color = Color(0xFFFBB296))
+                    Text(text = "Accept Confirmation", fontSize = 20.sp, color = Color(0xFFFBB296))
                 },
                 text = {
-                    Text("Are you sure you want to cancel this sign up, all previously inputted information will be deleted.")
+                    Text("By accepting, you agree to follow the community guidelines and maintain respect for others in your interactions.")
                 },
                 confirmButton = {
                     TextButton(onClick = {
                         showDialog = false
-                        onAgree() // Navigate to the next page or perform any required action
+                        authViewModel.updateUserAgreement(
+                            onSuccess = {
+                                Toast.makeText(context, "Agreement accepted successfully!", Toast.LENGTH_SHORT).show()
+                                onAgree() // Navigate to the next page
+                            },
+                            onFailure = { errorMessage ->
+                                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                            }
+                        )
                     }) {
                         Text("YES", fontWeight = FontWeight.Bold)
                     }

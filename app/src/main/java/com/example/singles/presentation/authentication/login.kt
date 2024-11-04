@@ -1,5 +1,7 @@
-package com.example.singles.presentation.registration
+package com.example.singles.presentation.authentication
 
+import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -14,14 +16,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.singles.util.PacificoFontFamily
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginPage(
-    onSignUpClick: () -> Unit
+    onSignUpClick: () -> Unit,
+    onNavigate: (String) -> Unit,
+    authViewModel: AuthViewModel
 ) {
+    val email = remember { mutableStateOf("") }
+    val password = remember { mutableStateOf("") }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val authState by authViewModel.authState.collectAsState()
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -69,7 +87,8 @@ fun LoginPage(
                onClick = {},
                modifier = Modifier
                    .weight(1f)
-                   .border(2.dp, Color(0xFFFBB296), shape = RoundedCornerShape(50)).background(color = Color(0xFFFBB296),shape = RoundedCornerShape(50)),
+                   .border(2.dp, Color(0xFFFBB296), shape = RoundedCornerShape(50))
+                   .background(color = Color(0xFFFBB296), shape = RoundedCornerShape(50)),
                shape = RoundedCornerShape(50),
                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBB296))
            ) {
@@ -81,21 +100,28 @@ fun LoginPage(
 
         // Input Fields
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
+            value = email.value,
+            onValueChange = { email.value = it },
             label = { Text("Email/Username") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             shape = RoundedCornerShape(8.dp),
-            colors = TextFieldDefaults.outlinedTextFieldColors(focusedBorderColor = Color(0xFFFBB296))
+            colors = TextFieldDefaults.outlinedTextFieldColors(focusedBorderColor = Color(0xFFFBB296)),
+
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Next
+                    ),
+            keyboardActions = KeyboardActions(
+                onNext = { keyboardController?.hide() }
+            )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
+            value = password.value,
+            onValueChange = { password.value = it },
             label = { Text("Password") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -120,14 +146,43 @@ fun LoginPage(
 
         // Login Button
         Button(
-            onClick = {},
+            onClick = {
+                when {
+                    !Patterns.EMAIL_ADDRESS.matcher(email.value).matches() -> {
+                        Toast.makeText(context, "Please enter a valid email address", Toast.LENGTH_SHORT).show()
+                    }
+                    (email.value.isEmpty() || password.value.isEmpty()) -> {
+                        Toast.makeText(context, "Please fill in all details", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        authViewModel.signIn(
+                            email.value,
+                            password.value,
+                            onNavigate = onNavigate,
+                            context = context
+                        )
+                    }
+                }
+              },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 32.dp),
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBB296))
         ) {
-            Text(text = "Login", color = Color.White)
+            when (authState) {
+                is AuthState.Loading -> CircularProgressIndicator()
+                is AuthState.Success -> Text("Sign In Successful!",color = Color.White)
+                is AuthState.Error -> {
+                    Text(text = "Login", color = Color.White)
+                    val errorMessage = (authState as AuthState.Error).message
+                    LaunchedEffect(authState) {
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                    }
+                }
+                else -> Text(text = "Login", color = Color.White)
+            }
+
         }
 
         Spacer(modifier = Modifier.height(16.dp))
