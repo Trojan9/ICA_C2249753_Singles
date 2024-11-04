@@ -1,3 +1,5 @@
+package com.example.singles.domain.repository.authentication
+
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -48,6 +50,26 @@ class AuthRepository(private val firebaseAuth: FirebaseAuth, private val firesto
     suspend fun updateUserAgreement(userId: String): Result<Unit> {
         return try {
             firestore.collection("users").document(userId).update("isAgreed", true).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+     fun sendEmailVerification(): Result<Unit> {
+        return try {
+            val user = firebaseAuth.currentUser
+            user?.sendEmailVerification()
+                ?.addOnCompleteListener { verificationTask ->
+                    if (verificationTask.isSuccessful) {
+                        // Email sent successfully
+                        Result.success(Unit)
+                    } else {
+                        // Handle error
+                        // Return the error if the task failed
+                        val exception = verificationTask.exception ?: Exception("Unknown error occurred during email verification")
+                        Result.failure<Unit>(exception)
+                      }
+                }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

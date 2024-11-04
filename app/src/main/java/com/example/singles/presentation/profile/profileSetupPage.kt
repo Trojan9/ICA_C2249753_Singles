@@ -1,5 +1,6 @@
 package com.example.singles.presentation.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -19,16 +21,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.singles.R
+import com.example.singles.presentation.authentication.AuthState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileSetupPage(navController: NavController,onContinueClick: () -> Unit) {
+fun ProfileSetupPage(navController: NavController,onContinueClick: () -> Unit,profileViewModel: ProfileViewModel) {
     var selectedGender by remember { mutableStateOf("GENDER") }
     var age by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
     var termsAccepted by remember { mutableStateOf(false) }
     var isGenderDropdownExpanded by remember { mutableStateOf(false) }
-
+    val context = LocalContext.current
+    val profileState by profileViewModel.profileState.collectAsState()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -150,7 +154,18 @@ fun ProfileSetupPage(navController: NavController,onContinueClick: () -> Unit) {
 
         // Continue Button
         Button(
-            onClick = onContinueClick,
+            onClick = {
+                val userMap = mapOf("age" to age,"gender" to selectedGender,"displayName" to displayName)
+                profileViewModel.updateUserProfile(
+                    onSuccess = {
+                        Toast.makeText(context, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
+                        onContinueClick() // Navigate to the next page
+                    },
+                    onFailure = { errorMessage ->
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                    },map=userMap
+                )
+            },
             enabled = termsAccepted,
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBB296)),
             modifier = Modifier
@@ -159,7 +174,19 @@ fun ProfileSetupPage(navController: NavController,onContinueClick: () -> Unit) {
                 .height(48.dp),
             shape = RoundedCornerShape(50)
         ) {
-            Text(text = "Continue", color = Color.White)
+            when (profileState) {
+                is ProfileState.Loading -> CircularProgressIndicator()
+                is ProfileState.Success -> Text(text = "Continue", color = Color.White)
+                is ProfileState.Error -> {
+                    Text(text = "Continue", color = Color.White)
+                    val errorMessage = (profileState as ProfileState.Error).message
+                    LaunchedEffect(profileState) {
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                    }
+                }
+                else -> Text(text = "Continue", color = Color.White)
+            }
+
         }
     }
 }
