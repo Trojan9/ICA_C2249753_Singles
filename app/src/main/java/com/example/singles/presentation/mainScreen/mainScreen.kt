@@ -12,7 +12,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.singles.domain.factory.AuthViewModelFactory
+import com.example.singles.domain.factory.authentication.AuthViewModelFactory
+import com.example.singles.domain.factory.profile.ProfileViewModelFactory
 import com.example.singles.presentation.authentication.AuthViewModel
 import com.example.singles.presentation.onboarding.OnboardingScreen
 import com.example.singles.presentation.profile.ProfileSetupPage
@@ -24,6 +25,7 @@ import com.example.singles.presentation.authentication.LoginPage
 import com.example.singles.presentation.authentication.SignUpPage
 import com.example.singles.presentation.authentication.WelcomePage
 import com.example.singles.presentation.bottomNavigation
+import com.example.singles.presentation.profile.ProfileViewModel
 import com.example.singles.ui.theme.SinglesTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -34,6 +36,9 @@ fun MainScreen() {
     val firestore = FirebaseFirestore.getInstance()
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(firebaseAuth,firestore)
+    )
+    val profileViewModel: ProfileViewModel = viewModel(
+        factory = ProfileViewModelFactory(firebaseAuth,firestore)
     )
     Box(
         modifier = Modifier
@@ -77,14 +82,14 @@ fun MainScreen() {
                 WelcomePage(  authViewModel = authViewModel,onAgree = { navController.navigate("profileSetup") })
             }
             composable("profileSetup") {
-                ProfileSetupPage(navController=navController,onContinueClick = { navController.navigate("verificationEmail") })
+                ProfileSetupPage(navController=navController,onContinueClick = { navController.navigate("verificationEmail") }, profileViewModel = profileViewModel)
             }
             composable("verificationEmail") {
-                VerificationEmailPage(onNextClick = { navController.navigate("university") })
+                VerificationEmailPage(onNextClick = { navController.navigate("university") },authViewModel=authViewModel)
             }
             composable("university") {
 
-                UniversityPage(onContinueClick = { navController.navigate("uploadPhotos") })
+                UniversityPage(onContinueClick = { navController.navigate("uploadPhotos") },profileViewModel=profileViewModel)
             }
             composable("uploadPhotos") {
                 UploadPhotosPage(navController=navController,onContinueClick = { navController.navigate("navBar") })

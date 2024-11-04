@@ -1,6 +1,6 @@
 package com.example.singles.presentation.authentication
 
-import AuthRepository
+import com.example.singles.domain.repository.authentication.AuthRepository
 import android.content.Context
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
@@ -40,7 +40,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         viewModelScope.launch {
             val authResult = authRepository.signInWithEmail(email, password)
             if (authResult.isSuccess) {
-                _authState.value= AuthState.Success(authResult.getOrNull())
+
                 val user = authResult.getOrNull()
                 user?.let {
                     val userId = it.uid
@@ -51,19 +51,24 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                         val isAgreed = userData?.get("isAgreed") as? Boolean
                         val age = userData?.get("age") as? String
                         val gender = userData?.get("gender") as? String
-                        val isEmailVerified = userData?.get("isEmailVerified") as? Boolean
+                        val university = userData?.get("institution") as? String
+                        val isEmailVerified = user.isEmailVerified
 
                         when {
                             isAgreed == null -> onNavigate("welcome")
                             age == null || gender == null -> onNavigate("profileSetup")
-                            isEmailVerified == null -> onNavigate("verificationEmail")
-                            else -> onNavigate("home")
+                            !isEmailVerified  -> onNavigate("verificationEmail")
+                            university == null -> onNavigate("university")
+                            else -> onNavigate("navBar")
                         }
                         Toast.makeText(context, "Sign In Successful", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(context, userDocumentResult.exceptionOrNull()?.message ?: "Error retrieving user data", Toast.LENGTH_SHORT).show()
                     }
+                    _authState.value= AuthState.Success(authResult.getOrNull())
+                    _authState.value= AuthState.Idle
                 }
+
             } else {
                 _authState.value = AuthState.Error(authResult.exceptionOrNull()?.message ?: "Login failed")
             }
@@ -91,6 +96,18 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
+    fun stopLoader() {
+        _authState.value= AuthState.Idle
+    }
+    fun sendEmailVerification() {
+        val userEmail =  authRepository.sendEmailVerification();
+        if (userEmail.isSuccess) {
+
+            _authState.value= AuthState.Idle
+        }else{
+            _authState.value = AuthState.Error(userEmail.exceptionOrNull()?.message ?: "email failed")
+        }
+    }
 }
 
 sealed class AuthState {

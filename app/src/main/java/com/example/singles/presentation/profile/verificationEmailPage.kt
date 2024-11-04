@@ -16,9 +16,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.singles.R
+import com.example.singles.presentation.authentication.AuthViewModel
 
 @Composable
-fun VerificationEmailPage(onNextClick: () -> Unit) {
+fun VerificationEmailPage(onNextClick: () -> Unit,authViewModel: AuthViewModel) {
+    authViewModel.sendEmailVerification()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -55,7 +57,9 @@ fun VerificationEmailPage(onNextClick: () -> Unit) {
         Spacer(modifier = Modifier.weight(1f))
 
         // Next Button
-        TextButton(onClick = onNextClick) {
+        TextButton(onClick = {
+
+            onNextClick()}) {
             Text(
                 text = "Next >",
                 color = Color(0xFFFBB296),

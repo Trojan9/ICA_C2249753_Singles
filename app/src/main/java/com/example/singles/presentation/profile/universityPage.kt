@@ -1,4 +1,5 @@
 package com.example.singles.presentation.profile
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -7,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -15,9 +17,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UniversityPage(onContinueClick: () -> Unit) {
+fun UniversityPage(onContinueClick: () -> Unit,profileViewModel: ProfileViewModel) {
     var universityName by remember { mutableStateOf("") }
-
+    val profileState by profileViewModel.profileState.collectAsState()
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -58,13 +61,35 @@ fun UniversityPage(onContinueClick: () -> Unit) {
 
         // Continue Button
         Button(
-            onClick = onContinueClick,
+            onClick = {
+                profileViewModel.updateUniversity(
+                    onSuccess = {
+                        Toast.makeText(context, "University name updated successfully!", Toast.LENGTH_SHORT).show()
+                        onContinueClick() // Navigate to the next page
+                    },
+                    onFailure = { errorMessage ->
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                    }, institution = universityName
+                )
+                 },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBB296)),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp)
         ) {
-            Text(text = "Continue", color = Color.White)
+            when (profileState) {
+                is ProfileState.Loading -> CircularProgressIndicator()
+                is ProfileState.Success -> Text(text = "Continue", color = Color.White)
+                is ProfileState.Error -> {
+                    Text(text = "Continue", color = Color.White)
+                    val errorMessage = (profileState as ProfileState.Error).message
+                    LaunchedEffect(profileState) {
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                    }
+                }
+                else -> Text(text = "Continue", color = Color.White)
+            }
+
         }
     }
 }
