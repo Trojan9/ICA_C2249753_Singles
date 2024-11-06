@@ -7,6 +7,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -29,16 +30,18 @@ import com.example.singles.presentation.profile.ProfileViewModel
 import com.example.singles.ui.theme.SinglesTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 
 @Composable
 fun MainScreen() {
     val firebaseAuth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
+    val context = LocalContext.current
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(firebaseAuth,firestore)
     )
     val profileViewModel: ProfileViewModel = viewModel(
-        factory = ProfileViewModelFactory(firebaseAuth,firestore)
+        factory = ProfileViewModelFactory(firebaseAuth,firestore,context)
     )
     Box(
         modifier = Modifier
@@ -92,7 +95,7 @@ fun MainScreen() {
                 UniversityPage(onContinueClick = { navController.navigate("uploadPhotos") },profileViewModel=profileViewModel)
             }
             composable("uploadPhotos") {
-                UploadPhotosPage(navController=navController,onContinueClick = { navController.navigate("navBar") })
+                UploadPhotosPage(navController=navController,onContinueClick = { navController.navigate("navBar") },profileViewModel=profileViewModel)
             }
             composable("navBar") {
                 bottomNavigation()

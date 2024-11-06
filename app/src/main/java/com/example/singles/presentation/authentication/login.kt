@@ -19,6 +19,9 @@ import com.example.singles.util.PacificoFontFamily
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,6 +30,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,9 +42,11 @@ fun LoginPage(
 ) {
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
+    val isPasswordVisible = remember { mutableStateOf(false) } // Toggle for password visibility
     val keyboardController = LocalSoftwareKeyboardController.current
     val authState by authViewModel.authState.collectAsState()
     val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -48,7 +55,6 @@ fun LoginPage(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(2.dp))
-
 
         // Title
         Text(
@@ -62,43 +68,39 @@ fun LoginPage(
         Spacer(modifier = Modifier.height(25.dp))
 
         // Toggle between Sign up and Login
-      Box(
-          modifier = Modifier .border(2.dp, Color(0xFFFBB296), shape = RoundedCornerShape(50)),
-
-      ) {
-
-       Row(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                ,
-            horizontalArrangement = Arrangement.Center
+                .border(2.dp, Color(0xFFFBB296), shape = RoundedCornerShape(50))
         ) {
-           Button(
-               onClick = onSignUpClick,
-               modifier = Modifier
-                   .weight(1f)
-                 ,
-               shape = RoundedCornerShape(50),
-               colors = ButtonDefaults.buttonColors(containerColor = Color.White)
-           ) {
-               Text(text = "Sign up", color = Color(0xFFFBB296))
-           }
-           Button(
-               onClick = {},
-               modifier = Modifier
-                   .weight(1f)
-                   .border(2.dp, Color(0xFFFBB296), shape = RoundedCornerShape(50))
-                   .background(color = Color(0xFFFBB296), shape = RoundedCornerShape(50)),
-               shape = RoundedCornerShape(50),
-               colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBB296))
-           ) {
-               Text(text = "Login", color = Color.White)
-           }
-       }}
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(
+                    onClick = onSignUpClick,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                ) {
+                    Text(text = "Sign up", color = Color(0xFFFBB296))
+                }
+                Button(
+                    onClick = {},
+                    modifier = Modifier
+                        .weight(1f)
+                        .border(2.dp, Color(0xFFFBB296), shape = RoundedCornerShape(50))
+                        .background(color = Color(0xFFFBB296), shape = RoundedCornerShape(50)),
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBB296))
+                ) {
+                    Text(text = "Login", color = Color.White)
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Input Fields
+        // Email Field
         OutlinedTextField(
             value = email.value,
             onValueChange = { email.value = it },
@@ -108,17 +110,13 @@ fun LoginPage(
                 .padding(horizontal = 16.dp),
             shape = RoundedCornerShape(8.dp),
             colors = TextFieldDefaults.outlinedTextFieldColors(focusedBorderColor = Color(0xFFFBB296)),
-
-            keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Next
-                    ),
-            keyboardActions = KeyboardActions(
-                onNext = { keyboardController?.hide() }
-            )
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { keyboardController?.hide() })
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Password Field with Toggle
         OutlinedTextField(
             value = password.value,
             onValueChange = { password.value = it },
@@ -127,7 +125,14 @@ fun LoginPage(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             shape = RoundedCornerShape(8.dp),
-            colors = TextFieldDefaults.outlinedTextFieldColors(focusedBorderColor = Color(0xFFFBB296))
+            colors = TextFieldDefaults.outlinedTextFieldColors(focusedBorderColor = Color(0xFFFBB296)),
+            visualTransformation = if (isPasswordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                val icon = if (isPasswordVisible.value) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                IconButton(onClick = { isPasswordVisible.value = !isPasswordVisible.value }) {
+                    Icon(imageVector = icon, contentDescription = if (isPasswordVisible.value) "Hide Password" else "Show Password")
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -163,7 +168,7 @@ fun LoginPage(
                         )
                     }
                 }
-              },
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 32.dp),
@@ -172,7 +177,7 @@ fun LoginPage(
         ) {
             when (authState) {
                 is AuthState.Loading -> CircularProgressIndicator()
-                is AuthState.Success -> Text("Sign In Successful!",color = Color.White)
+                is AuthState.Success -> Text("Sign In Successful!", color = Color.White)
                 is AuthState.Error -> {
                     Text(text = "Login", color = Color.White)
                     val errorMessage = (authState as AuthState.Error).message
@@ -182,7 +187,6 @@ fun LoginPage(
                 }
                 else -> Text(text = "Login", color = Color.White)
             }
-
         }
 
         Spacer(modifier = Modifier.height(16.dp))

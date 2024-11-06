@@ -125,6 +125,7 @@ dependencies {
     // TODO: Add the dependencies for Firebase products you want to use
     // When using the BoM, don't specify versions in Firebase dependencies
     implementation("com.google.firebase:firebase-analytics")
+    implementation ("com.google.firebase:firebase-storage-ktx:21.0.1")
     implementation ("androidx.compose.material:material-icons-extended:1.7.5")
     implementation("com.google.firebase:firebase-auth-ktx:23.1.0")
     implementation ("com.google.firebase:firebase-firestore-ktx:24.4.0")

@@ -2,6 +2,7 @@ package com.example.singles.presentation.profile
 
 
 import android.content.Context
+import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -61,11 +62,32 @@ class ProfileViewModel(private val profileRepository: ProfileRepository,private 
         }
     }
 
+    fun uploadImage(imageUri: Uri,index:Int) {
+        val userId = (authRepository.getCurrentUser())?.uid
+        if (userId != null) {
+            _profileState.value = ProfileState.Loading
+            viewModelScope.launch {
+                val result = profileRepository.uploadImageToStorage(imageUri, userId,index.toString())
+                if (result.isSuccess) {
+                    _profileState.value = ProfileState.Success(result.getOrNull() ?: "")
+                } else {
+                    _profileState.value = ProfileState.Error(result.exceptionOrNull()?.message ?: "Failed to upload image")
+                }
+            }
+        } else {
+            _profileState.value = ProfileState.Error("User not authenticated")
+        }
+    }
+
+    fun stopLoader(){
+        _profileState.value= ProfileState.Idle
+    }
+
 }
 
 sealed class ProfileState {
     data object Idle : ProfileState()
     data object Loading : ProfileState()
-    data class Success(val user: FirebaseUser?) : ProfileState()
+    data class Success(val response: Any) : ProfileState()
     data class Error(val message: String) : ProfileState()
 }

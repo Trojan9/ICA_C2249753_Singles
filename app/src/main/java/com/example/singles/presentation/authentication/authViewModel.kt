@@ -52,6 +52,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                         val age = userData?.get("age") as? String
                         val gender = userData?.get("gender") as? String
                         val university = userData?.get("institution") as? String
+                        val image = userData?.get("image0") as? String
                         val isEmailVerified = user.isEmailVerified
 
                         when {
@@ -59,6 +60,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                             age == null || gender == null -> onNavigate("profileSetup")
                             !isEmailVerified  -> onNavigate("verificationEmail")
                             university == null -> onNavigate("university")
+                            image == null -> onNavigate("uploadPhotos")
                             else -> onNavigate("navBar")
                         }
                         Toast.makeText(context, "Sign In Successful", Toast.LENGTH_SHORT).show()
