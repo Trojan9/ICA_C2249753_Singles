@@ -25,6 +25,7 @@ import com.example.singles.presentation.authentication.AuthenticateLayoutPage
 import com.example.singles.presentation.authentication.LoginPage
 import com.example.singles.presentation.authentication.SignUpPage
 import com.example.singles.presentation.authentication.WelcomePage
+import com.example.singles.presentation.bottomNav.profile.UpdatePhotosPage
 import com.example.singles.presentation.bottomNavigation
 import com.example.singles.presentation.profile.ProfileViewModel
 import com.example.singles.ui.theme.SinglesTheme
@@ -97,8 +98,11 @@ fun MainScreen() {
             composable("uploadPhotos") {
                 UploadPhotosPage(navController=navController,onContinueClick = { navController.navigate("navBar") },profileViewModel=profileViewModel)
             }
+            composable("updatePhotos") {
+                UpdatePhotosPage(navController=navController,profileViewModel=profileViewModel)
+            }
             composable("navBar") {
-                bottomNavigation()
+                bottomNavigation(profileViewModel=profileViewModel,navController=navController,)
             }
 
         }

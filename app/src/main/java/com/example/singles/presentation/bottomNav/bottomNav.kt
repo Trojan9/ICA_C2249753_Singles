@@ -1,5 +1,6 @@
 package com.example.singles.presentation
 
+import NearbyScreen
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -8,15 +9,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavController
 import com.example.singles.presentation.bottomNav.chats.ChatScreen
 import com.example.singles.presentation.bottomNav.likes.LikesScreen
 import com.example.singles.presentation.bottomNav.profile.ProfileScreen
-import com.example.singles.presentation.nearby.NearbyScreen
+import com.example.singles.presentation.profile.ProfileViewModel
 
 @Composable
-fun bottomNavigation() {
+fun bottomNavigation(navController: NavController, profileViewModel: ProfileViewModel) {
     var selectedTab by remember { mutableStateOf("Nearby") }
-
+profileViewModel.getUserProfile()
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
@@ -28,10 +30,10 @@ fun bottomNavigation() {
         }
     ) { innerPadding ->
         when (selectedTab) {
-            "Nearby" -> NearbyScreen(modifier = Modifier.padding(innerPadding))
+            "Nearby" -> NearbyScreen(modifier = Modifier.padding(innerPadding),profileViewModel=profileViewModel)
             "Likes" -> LikesScreen(modifier = Modifier.padding(innerPadding))
             "Chats" -> ChatScreen(modifier = Modifier.padding(innerPadding))
-            "Profile" -> ProfileScreen(modifier = Modifier.padding(innerPadding))
+            "Profile" -> ProfileScreen(modifier = Modifier.padding(innerPadding),profileViewModel=profileViewModel, navController = navController)
         }
     }
 }
