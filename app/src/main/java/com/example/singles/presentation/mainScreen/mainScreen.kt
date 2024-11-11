@@ -13,8 +13,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.singles.domain.factory.authentication.AuthViewModelFactory
-import com.example.singles.domain.factory.profile.ProfileViewModelFactory
+import androidx.navigation.navArgument
+import com.example.singles.data.local.AppDatabase
+import com.example.singles.di.factory.authentication.AuthViewModelFactory
+import com.example.singles.di.factory.chat.ChatViewModelFactory
+import com.example.singles.di.factory.profile.ProfileViewModelFactory
+
 import com.example.singles.presentation.authentication.AuthViewModel
 import com.example.singles.presentation.onboarding.OnboardingScreen
 import com.example.singles.presentation.profile.ProfileSetupPage
@@ -25,6 +29,8 @@ import com.example.singles.presentation.authentication.AuthenticateLayoutPage
 import com.example.singles.presentation.authentication.LoginPage
 import com.example.singles.presentation.authentication.SignUpPage
 import com.example.singles.presentation.authentication.WelcomePage
+import com.example.singles.presentation.bottomNav.chats.ChatDetailScreen
+import com.example.singles.presentation.bottomNav.chats.ChatViewModel
 import com.example.singles.presentation.bottomNav.profile.UpdatePhotosPage
 import com.example.singles.presentation.bottomNavigation
 import com.example.singles.presentation.profile.ProfileViewModel
@@ -38,12 +44,21 @@ fun MainScreen() {
     val firebaseAuth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
     val context = LocalContext.current
+    // Initialize dependencies
+    val database = AppDatabase.getDatabase(context) // Replace with your DB initializer
+    val messageDao = database.messageDao()
+
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(firebaseAuth,firestore)
     )
     val profileViewModel: ProfileViewModel = viewModel(
         factory = ProfileViewModelFactory(firebaseAuth,firestore,context)
     )
+
+    val chatViewModel: ChatViewModel = viewModel(
+        factory = ChatViewModelFactory(firestore,messageDao)
+    )
+    val userId= profileViewModel.getUserId()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -53,7 +68,7 @@ fun MainScreen() {
         val navController = rememberNavController()
         NavHost(
             navController = navController,
-            startDestination = "onboarding"
+            startDestination = if (userId != null) "navBar" else "onboarding"
         ) {
             composable("onboarding") {
                 OnboardingScreen(
@@ -102,8 +117,30 @@ fun MainScreen() {
                 UpdatePhotosPage(navController=navController,profileViewModel=profileViewModel)
             }
             composable("navBar") {
-                bottomNavigation(profileViewModel=profileViewModel,navController=navController,)
+                bottomNavigation(profileViewModel=profileViewModel,navController=navController, chatViewModel = chatViewModel)
             }
+
+            // Chat Detail Screen
+            composable(
+                route = "chat_detail/{userName}/{chatId}",
+                arguments = listOf(
+                    navArgument("userName") { defaultValue = "" },
+                    navArgument("chatId") { defaultValue = "" }
+                )
+            ) { backStackEntry ->
+                val userName = backStackEntry.arguments?.getString("userName") ?: ""
+                val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
+
+                ChatDetailScreen(
+                    navController = navController,
+                    userName = userName,
+                    chatId = chatId,
+                    profileViewModel = profileViewModel,
+                    chatViewModel = chatViewModel
+                )
+            }
+
+
 
         }
         }

@@ -7,8 +7,8 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.singles.domain.model.UserProfile
-import com.example.singles.domain.repository.authentication.AuthRepository
-import com.example.singles.domain.repository.profile.ProfileRepository
+import com.example.singles.data.repository.authentication.AuthRepository
+import com.example.singles.data.repository.profile.ProfileRepository
 import com.example.singles.presentation.authentication.AuthState
 import com.google.firebase.auth.FirebaseUser
 
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ProfileViewModel(private val profileRepository: ProfileRepository,private val authRepository: AuthRepository) : ViewModel() {
+class ProfileViewModel(private val profileRepository: ProfileRepository, private val authRepository: AuthRepository) : ViewModel() {
 
     private val _profileState = MutableStateFlow<ProfileState>(ProfileState.Idle)
     val profileState: StateFlow<ProfileState> get() = _profileState
@@ -61,10 +61,10 @@ class ProfileViewModel(private val profileRepository: ProfileRepository,private 
                             displayName = data["displayName"] as String,
                             fullName = data["fullName"] as String,
                             gender = data["gender"] as String,
-                            image0 = data["image0"] as String,
-                            image1 = data["image1"] as String,
-                            image2 = data["image2"] as String,
-                            image3 = data["image3"] as String,
+                            image0 = data["image0"] as? String ?: "",
+                            image1 = data["image1"] as? String ?: "",
+                            image2 = data["image2"] as? String ?: "",
+                            image3 = data["image3"] as? String ?: "",
                             institution = data["institution"] as String,
                             email = userId.email ,
                             isAgreed = data["isAgreed"] as Boolean
@@ -123,6 +123,15 @@ class ProfileViewModel(private val profileRepository: ProfileRepository,private 
     }
 
     fun stopLoader(){
+        _profileState.value= ProfileState.Idle
+    }
+    fun getUserId():String?{
+        return (authRepository.getCurrentUser())?.uid;
+    }
+
+    fun logOut(){
+        _profileState.value = ProfileState.Loading
+         authRepository.signOut();
         _profileState.value= ProfileState.Idle
     }
 

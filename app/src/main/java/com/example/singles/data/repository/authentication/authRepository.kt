@@ -1,4 +1,4 @@
-package com.example.singles.domain.repository.authentication
+package com.example.singles.data.repository.authentication
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -81,7 +81,10 @@ class AuthRepository(private val firebaseAuth: FirebaseAuth, private val firesto
 
     fun signOut() {
         firebaseAuth.signOut()
+        firestore.clearPersistence()
     }
+
+
 
 
 }

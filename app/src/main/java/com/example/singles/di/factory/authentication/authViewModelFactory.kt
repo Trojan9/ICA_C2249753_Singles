@@ -1,6 +1,6 @@
-package com.example.singles.domain.factory.authentication
+package com.example.singles.di.factory.authentication
 
-import com.example.singles.domain.repository.authentication.AuthRepository
+import com.example.singles.data.repository.authentication.AuthRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.singles.presentation.authentication.AuthViewModel

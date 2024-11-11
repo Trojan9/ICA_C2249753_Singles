@@ -11,12 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import com.example.singles.presentation.bottomNav.chats.ChatScreen
+import com.example.singles.presentation.bottomNav.chats.ChatViewModel
 import com.example.singles.presentation.bottomNav.likes.LikesScreen
 import com.example.singles.presentation.bottomNav.profile.ProfileScreen
 import com.example.singles.presentation.profile.ProfileViewModel
 
 @Composable
-fun bottomNavigation(navController: NavController, profileViewModel: ProfileViewModel) {
+fun bottomNavigation(navController: NavController, profileViewModel: ProfileViewModel,chatViewModel: ChatViewModel) {
     var selectedTab by remember { mutableStateOf("Nearby") }
 profileViewModel.getUserProfile()
     Scaffold(
@@ -32,7 +33,7 @@ profileViewModel.getUserProfile()
         when (selectedTab) {
             "Nearby" -> NearbyScreen(modifier = Modifier.padding(innerPadding),profileViewModel=profileViewModel)
             "Likes" -> LikesScreen(modifier = Modifier.padding(innerPadding))
-            "Chats" -> ChatScreen(modifier = Modifier.padding(innerPadding))
+            "Chats" -> ChatScreen(modifier = Modifier.padding(innerPadding),navController = navController, chatViewModel = chatViewModel,profileViewModel=profileViewModel)
             "Profile" -> ProfileScreen(modifier = Modifier.padding(innerPadding),profileViewModel=profileViewModel, navController = navController)
         }
     }

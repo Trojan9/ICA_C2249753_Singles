@@ -1,6 +1,6 @@
 package com.example.singles.presentation.authentication
 
-import com.example.singles.domain.repository.authentication.AuthRepository
+import com.example.singles.data.repository.authentication.AuthRepository
 import android.content.Context
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
@@ -101,6 +101,10 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     fun stopLoader() {
         _authState.value= AuthState.Idle
     }
+
+    fun logOut() {
+        authRepository.signOut()
+    }
     fun sendEmailVerification() {
         val userEmail =  authRepository.sendEmailVerification();
         if (userEmail.isSuccess) {
@@ -109,6 +113,9 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }else{
             _authState.value = AuthState.Error(userEmail.exceptionOrNull()?.message ?: "email failed")
         }
+
+
+
     }
 }
 

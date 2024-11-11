@@ -150,6 +150,19 @@ fun ProfileScreen(
             onClick = {}, // No action for email since it's uneditable
             editable = false
         )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = {
+                profileViewModel.logOut()
+                navController.navigate("authenticate") {
+                    popUpTo("navBar") { inclusive = true }
+                }
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBB296)), // Add color here
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Log Out", color = Color.White) // Optionally, set text color for better contrast
+        }
     }
 
     // Show dialog for editing profile fields

@@ -113,10 +113,11 @@ dependencies {
     implementation("androidx.paging:paging-compose:3.2.0-rc01")
 
     // Room for database handling
-    val roomVersion = "2.5.2"
+    val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     kapt("androidx.room:room-compiler:$roomVersion")
     implementation("androidx.room:room-ktx:2.5.2")
+
 
     // Import the Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))

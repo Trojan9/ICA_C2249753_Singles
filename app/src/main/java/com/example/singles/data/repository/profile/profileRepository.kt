@@ -1,4 +1,4 @@
-package com.example.singles.domain.repository.profile
+package com.example.singles.data.repository.profile
 
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth

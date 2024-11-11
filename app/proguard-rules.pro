@@ -11,6 +11,13 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+-keepclassmembers class kotlinx.coroutines.** {
+    *;
+}
+-keepclassmembers class kotlinx.coroutines.channels.** {
+    *;
+}
+-dontwarn kotlinx.coroutines.**
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
