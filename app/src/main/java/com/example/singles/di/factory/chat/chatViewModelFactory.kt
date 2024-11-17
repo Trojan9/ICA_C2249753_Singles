@@ -4,7 +4,7 @@ package com.example.singles.di.factory.chat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.singles.data.dao.MessageDao
-
+import com.example.singles.data.repository.authentication.AuthRepository
 import com.example.singles.data.repository.chat.ChatRepository
 
 import com.example.singles.presentation.bottomNav.chats.ChatViewModel
