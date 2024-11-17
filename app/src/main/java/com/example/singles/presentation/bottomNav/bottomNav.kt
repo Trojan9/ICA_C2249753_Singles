@@ -13,11 +13,12 @@ import androidx.navigation.NavController
 import com.example.singles.presentation.bottomNav.chats.ChatScreen
 import com.example.singles.presentation.bottomNav.chats.ChatViewModel
 import com.example.singles.presentation.bottomNav.likes.LikesScreen
+import com.example.singles.presentation.bottomNav.nearBy.NearbyViewModel
 import com.example.singles.presentation.bottomNav.profile.ProfileScreen
 import com.example.singles.presentation.profile.ProfileViewModel
 
 @Composable
-fun bottomNavigation(navController: NavController, profileViewModel: ProfileViewModel,chatViewModel: ChatViewModel) {
+fun bottomNavigation(navController: NavController, profileViewModel: ProfileViewModel,chatViewModel: ChatViewModel,onLogOut: () -> Unit,nearbyViewModel: NearbyViewModel) {
     var selectedTab by remember { mutableStateOf("Nearby") }
 profileViewModel.getUserProfile()
     Scaffold(
@@ -31,10 +32,10 @@ profileViewModel.getUserProfile()
         }
     ) { innerPadding ->
         when (selectedTab) {
-            "Nearby" -> NearbyScreen(modifier = Modifier.padding(innerPadding),profileViewModel=profileViewModel)
+            "Nearby" -> NearbyScreen(modifier = Modifier.padding(innerPadding),profileViewModel=profileViewModel,nearbyViewModel=nearbyViewModel)
             "Likes" -> LikesScreen(modifier = Modifier.padding(innerPadding))
             "Chats" -> ChatScreen(modifier = Modifier.padding(innerPadding),navController = navController, chatViewModel = chatViewModel,profileViewModel=profileViewModel)
-            "Profile" -> ProfileScreen(modifier = Modifier.padding(innerPadding),profileViewModel=profileViewModel, navController = navController)
+            "Profile" -> ProfileScreen(modifier = Modifier.padding(innerPadding),profileViewModel=profileViewModel, navController = navController, onLogOut = onLogOut)
         }
     }
 }

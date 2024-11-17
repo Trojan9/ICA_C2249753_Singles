@@ -34,6 +34,7 @@ import com.example.singles.presentation.profile.ProfileViewModel
 fun ProfileScreen(
     profileViewModel: ProfileViewModel,
     navController: NavController,
+    onLogOut:()->Unit,
     modifier: Modifier = Modifier
 ) {
     profileViewModel.stopLoader()
@@ -152,12 +153,7 @@ fun ProfileScreen(
         )
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = {
-                profileViewModel.logOut()
-                navController.navigate("authenticate") {
-                    popUpTo("navBar") { inclusive = true }
-                }
-            },
+            onClick = onLogOut,
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBB296)), // Add color here
             modifier = Modifier.fillMaxWidth()
         ) {
