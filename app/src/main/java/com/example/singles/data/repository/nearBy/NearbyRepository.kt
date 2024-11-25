@@ -85,4 +85,73 @@ class NearbyRepository(private val firestore: FirebaseFirestore) {
 
         return chatId
     }
+
+    suspend fun fetchLikedProfiles(currentUserId: String): List<Map<String, Any>> {
+        // Query the "likesFrom" subcollection under the current user's document
+        val likesSnapshot = firestore.collection("likes")
+            .document(currentUserId)
+            .collection("likesFrom")
+            .get()
+            .await()
+
+        // Extract the IDs of users the current user has liked
+        val likedUserIds = likesSnapshot.documents.mapNotNull { it.id }
+
+        if (likedUserIds.isEmpty()) {
+            return emptyList()
+        }
+
+        // Fetch the corresponding profiles from the "users" collection
+        val profilesSnapshot = firestore.collection("users")
+            .whereIn(FieldPath.documentId(), likedUserIds)
+            .get()
+            .await()
+
+        // Map the profiles to a list of data
+        return profilesSnapshot.documents.mapNotNull { document ->
+            val profileData = document.data.orEmpty().toMutableMap()
+            profileData["userId"] = document.id // Add the document ID as "userId"
+            profileData
+        }
+    }
+
+
+
+    suspend fun addLike(currentUserId: String, profileId: String) {
+        val likeData = mapOf(
+            "likedBy" to currentUserId,
+            "timestamp" to System.currentTimeMillis()
+        )
+
+        // Add the like to the "likesFrom" subcollection of the profile
+        firestore.collection("likes")
+            .document(profileId)
+            .collection("likesFrom")
+            .document(currentUserId)
+            .set(likeData)
+            .await()
+    }
+
+    suspend fun isMutualLike(currentUserId: String, profileId: String): Boolean {
+        // Check if the profileId liked the current user
+        val mutualLikeSnapshot = firestore.collection("likes")
+            .document(currentUserId)
+            .collection("likesFrom")
+            .document(profileId)
+            .get()
+            .await()
+
+        return mutualLikeSnapshot.exists()
+    }
+
+
+    suspend fun removeLike(currentUserId: String, profileId: String) {
+        // Remove the like from the "likesFrom" subcollection
+        firestore.collection("likes")
+            .document(profileId)
+            .collection("likesFrom")
+            .document(currentUserId)
+            .delete()
+            .await()
+    }
 }

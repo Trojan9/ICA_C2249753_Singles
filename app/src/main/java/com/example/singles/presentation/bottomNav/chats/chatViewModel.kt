@@ -117,6 +117,22 @@ class ChatViewModel(private val chatRepository: ChatRepository) : ViewModel() {
 
                 // Update the UI state
                 _messages.value = _messages.value + newMessage
+
+                // Get recipient's token (ensure `getRecipientToken` is implemented in your repository)
+                val recipientToken = chatRepository.getRecipientToken(chatId, senderId)
+                // If a token exists, send a push notification
+//                if (recipientToken != null) {
+                    val senderName = chatRepository.getUserName(senderId) // Fetch sender's name
+                    chatRepository.sendPushNotification(
+                        token = recipientToken!!,
+                        title = "New Message from $senderName",
+                        body = text,
+                        userName= senderName,
+                        chatId = chatId
+
+                    )
+//                }
+
             } catch (e: Exception) {
                 _errorMessage.value = e.message
             } finally {

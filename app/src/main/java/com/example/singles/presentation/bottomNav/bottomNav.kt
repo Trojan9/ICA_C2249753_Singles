@@ -9,10 +9,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.singles.presentation.bottomNav.chats.ChatScreen
 import com.example.singles.presentation.bottomNav.chats.ChatViewModel
-import com.example.singles.presentation.bottomNav.likes.LikesScreen
+import com.example.singles.presentation.bottomNav.likes.LikesGridScreen
 import com.example.singles.presentation.bottomNav.nearBy.NearbyViewModel
 import com.example.singles.presentation.bottomNav.profile.ProfileScreen
 import com.example.singles.presentation.profile.ProfileViewModel
@@ -21,6 +22,9 @@ import com.example.singles.presentation.profile.ProfileViewModel
 fun bottomNavigation(navController: NavController, profileViewModel: ProfileViewModel,chatViewModel: ChatViewModel,onLogOut: () -> Unit,nearbyViewModel: NearbyViewModel) {
     var selectedTab by remember { mutableStateOf("Nearby") }
 profileViewModel.getUserProfile()
+
+    val currentUserId = profileViewModel.getUserId()
+    nearbyViewModel.fetchLikedProfiles(currentUserId!!)
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
@@ -33,7 +37,17 @@ profileViewModel.getUserProfile()
     ) { innerPadding ->
         when (selectedTab) {
             "Nearby" -> NearbyScreen(modifier = Modifier.padding(innerPadding),profileViewModel=profileViewModel,nearbyViewModel=nearbyViewModel)
-            "Likes" -> LikesScreen(modifier = Modifier.padding(innerPadding))
+            "Likes" ->
+            LikesGridScreen(
+                profiles = nearbyViewModel.profiles.collectAsState().value,
+                likedProfiles = nearbyViewModel.likedProfiles.collectAsState().value,
+                onProfileClick = { profileId -> navController.navigate("profile_detail/$profileId") },
+                onLikeToggle = { profile ->
+                    currentUserId?.let { userId ->
+                        nearbyViewModel.toggleLike(currentUserId=   currentUserId, profile =    profile ) // Pass currentUserId
+                    }}
+            )
+
             "Chats" -> ChatScreen(modifier = Modifier.padding(innerPadding),navController = navController, chatViewModel = chatViewModel,profileViewModel=profileViewModel)
             "Profile" -> ProfileScreen(modifier = Modifier.padding(innerPadding),profileViewModel=profileViewModel, navController = navController, onLogOut = onLogOut)
         }

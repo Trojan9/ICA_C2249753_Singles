@@ -132,4 +132,15 @@ dependencies {
     implementation ("com.google.firebase:firebase-firestore-ktx:24.4.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7") // Ensure you have ViewModel support for Jetpack Compose
 
+    //push notification
+    implementation ("com.google.firebase:firebase-messaging:24.1.0")
+
+
+    //Api calls
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("com.google.code.gson:gson:2.10.1")
+
+
+
 }

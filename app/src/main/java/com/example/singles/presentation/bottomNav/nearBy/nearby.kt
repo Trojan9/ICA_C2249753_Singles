@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -36,6 +37,7 @@ fun NearbyScreen(
     val errorMessage by nearbyViewModel.errorMessage.collectAsState()
     val userId = profileViewModel.getUserId()
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
     val userProfile by profileViewModel.userProfile.collectAsState()
     val offsetX = remember { Animatable(0f) }
     val offsetY = remember { Animatable(0f) }
@@ -100,7 +102,8 @@ fun NearbyScreen(
                                                     nearbyViewModel.handleSwipe(
                                                         "like",
                                                         userId!!,
-                                                        profileId
+                                                        profile,
+                                                       context
                                                     )
                                                     resetCard(offsetX, offsetY, rotationZ)
                                                 }
@@ -108,7 +111,8 @@ fun NearbyScreen(
                                                     nearbyViewModel.handleSwipe(
                                                         "dislike",
                                                         userId!!,
-                                                        profileId
+                                                        profile,
+                                                        context
                                                     )
                                                     resetCard(offsetX, offsetY, rotationZ)
                                                 }

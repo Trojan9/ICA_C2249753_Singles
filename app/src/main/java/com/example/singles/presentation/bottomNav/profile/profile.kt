@@ -20,12 +20,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.singles.R
 import com.example.singles.presentation.profile.ProfileState
 import com.example.singles.presentation.profile.ProfileViewModel
@@ -66,11 +68,20 @@ fun ProfileScreen(
             when (profileState) {
                 is ProfileState.Loading -> CircularProgressIndicator()
                 else -> {
-                    Image(
-                        painter = painterResource(id = R.drawable.usermatch),
-                        contentDescription = "Profile Picture",
-                        modifier = Modifier.fillMaxSize()
+                    AsyncImage(
+                        model = userProfile?.image0,
+                        contentDescription = "Profile Image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clip(MaterialTheme.shapes.medium),
+                        contentScale = ContentScale.Crop
                     )
+//                    Image(
+//                        painter = painterResource(id = R.drawable.usermatch),
+//                        contentDescription = "Profile Picture",
+//                        modifier = Modifier.fillMaxSize()
+//                    )
                 }
             }
         }

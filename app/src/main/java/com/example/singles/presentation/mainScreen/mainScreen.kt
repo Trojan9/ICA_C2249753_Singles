@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -12,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -37,6 +40,7 @@ import com.example.singles.presentation.authentication.SignUpPage
 import com.example.singles.presentation.authentication.WelcomePage
 import com.example.singles.presentation.bottomNav.chats.ChatDetailScreen
 import com.example.singles.presentation.bottomNav.chats.ChatViewModel
+import com.example.singles.presentation.bottomNav.likes.ProfileDetailScreen
 import com.example.singles.presentation.bottomNav.nearBy.NearbyViewModel
 import com.example.singles.presentation.bottomNav.profile.UpdatePhotosPage
 import com.example.singles.presentation.bottomNavigation
@@ -47,7 +51,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 
 @Composable
-fun MainScreen() {
+fun MainScreen(userName: String?, chatId: String?) {
     var initializationKey by remember { mutableStateOf(0) }
 
     Box(
@@ -76,7 +80,7 @@ fun MainScreen() {
                 factory = ChatViewModelFactory(firestore, messageDao)
             )
             val nearByViewModel: NearbyViewModel = viewModel(
-                factory = NearByViewModelFactory( firestore)
+                factory = NearByViewModelFactory(firestore)
             )
             firebaseAuth.currentUser?.reload() // Reload user context after login
             val userId = profileViewModel.getUserId()
@@ -85,7 +89,11 @@ fun MainScreen() {
             // NavHost for navigation
             NavHost(
                 navController = navController,
-                startDestination = if (userId != null) "navBar" else "onboarding"
+                startDestination = if (userId != null) {  if (chatId != null && userName != null) {
+                    "chat_detail/$userName/$chatId"
+                } else {
+                    "navBar"
+                } } else "onboarding"
             ) {
                 composable("onboarding") {
                     OnboardingScreen(
@@ -182,7 +190,36 @@ fun MainScreen() {
                         chatViewModel = chatViewModel
                     )
                 }
+
+
+
+
+                composable("profile_detail/{profileId}") { backStackEntry ->
+                    val profileId = backStackEntry.arguments?.getString("profileId") ?: ""
+
+                    val profiles by nearByViewModel.profiles.collectAsState()
+                    val likedProfiles by nearByViewModel.likedProfiles.collectAsState()
+
+                    val profile = profiles.find { it["userId"] == profileId }
+                        ?: likedProfiles.find { it["userId"] == profileId }
+                    if (profile != null) {
+                        ProfileDetailScreen(
+                            profile = profile,
+                            isLiked = likedProfiles.any { it["userId"] == profileId },
+                            onBackClick = { navController.popBackStack() },
+                            onLikeToggle = { nearByViewModel.toggleLike(userId!!, profile) }
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "Profile not found", color = Color.Gray)
+                        }
+                    }
+                }
             }
+
 
 
         }
@@ -194,7 +231,7 @@ fun MainScreen() {
 @Composable
 fun MainScreenPreview() {
     SinglesTheme {
-        MainScreen()
+        MainScreen(userName = null,chatId = null )
     }
 }
 

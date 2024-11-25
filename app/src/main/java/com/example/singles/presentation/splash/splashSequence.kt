@@ -10,7 +10,7 @@ import com.example.singles.presentation.mainScreen.MainScreen
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashSequence() {
+fun SplashSequence(userName: String?, chatId: String?) {
     var splashState by remember { mutableIntStateOf(1) } // 1 for first splash, 2 for second splash, 3 for main content
 
     // Launching a coroutine to manage the splash screen sequence
@@ -24,6 +24,6 @@ fun SplashSequence() {
     when (splashState) {
         1 -> FirstSplashScreen() // Show the first splash screen
         2 -> SecondSplashScreen() // Show the second splash screen
-        3 -> MainScreen() // Transition to main screen (or main app content)
+        3 -> MainScreen(userName = userName, chatId = chatId) // Transition to main screen (or main app content)
     }
 }

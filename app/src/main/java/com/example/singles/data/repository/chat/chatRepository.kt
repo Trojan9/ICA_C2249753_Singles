@@ -2,9 +2,13 @@ package com.example.singles.data.repository.chat
 
 import com.example.singles.data.dao.MessageDao
 import com.example.singles.data.entities.MessageEntity
+import com.example.singles.data.network.RetrofitClient
 import com.example.singles.domain.model.Chat
+import com.example.singles.domain.model.FCMRequest
+import com.example.singles.domain.model.Notification
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -235,6 +239,53 @@ class ChatRepository(
         } catch (e: Exception) {
             e.printStackTrace()
             false
+        }
+    }
+
+    suspend fun getRecipientToken(chatId: String, senderId: String): String? {
+        val chat = firestore.collection("chats").document(chatId).get().await()
+        val participants = chat.get("participants") as List<String>
+        val recipientId = participants.firstOrNull { it != senderId }
+
+        return recipientId?.let { userId ->
+            firestore.collection("users").document(userId).get().await()
+                .getString("fcmToken") // Ensure the token is stored under "fcmToken"
+        }
+    }
+
+
+    suspend fun getUserName(userId: String): String {
+        return firestore.collection("users").document(userId).get().await()
+            .getString("displayName") ?: "Unknown User"
+    }
+    suspend fun sendPushNotification(token: String, title: String, body: String, userName: String, chatId: String) {
+        val fcmService = RetrofitClient.instance
+
+        val payload = FCMRequest(
+            token = token,
+
+                title = title,
+                body = body,
+
+            data = mapOf(
+                "click_action" to "FLUTTER_NOTIFICATION_CLICK",
+                "userName" to userName,
+                "chatId" to chatId
+            )
+        )
+
+        try {
+            val response = fcmService.sendNotification(payload)
+
+            if (response.success) {
+                println("Notification sent successfully")
+            } else {
+                println("Failed to send notification")
+            }
+        } catch (e: Exception) {
+
+            e.printStackTrace()
+            println("Error sending notification: ${e.message}")
         }
     }
 

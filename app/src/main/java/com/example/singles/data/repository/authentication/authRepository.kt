@@ -3,6 +3,7 @@ package com.example.singles.data.repository.authentication
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.tasks.await
 
 class AuthRepository(private val firebaseAuth: FirebaseAuth, private val firestore: FirebaseFirestore) {
@@ -84,7 +85,14 @@ class AuthRepository(private val firebaseAuth: FirebaseAuth, private val firesto
         firestore.clearPersistence()
     }
 
-
+suspend fun updateFCM(){
+    FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(firebaseAuth.currentUser?.uid!!)
+            .update("fcmToken", token)
+    }
+}
 
 
 }

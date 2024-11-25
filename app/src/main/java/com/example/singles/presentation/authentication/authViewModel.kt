@@ -25,6 +25,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                     val firestoreResult = authRepository.addUserToFirestore(it.uid, fullName)
                     if (firestoreResult.isSuccess) {
                         _authState.value = AuthState.Success(user)
+                        authRepository.updateFCM()
                         onSuccess() // Navigate to the next page after successful signup and Firestore write
                     } else {
                         _authState.value = AuthState.Error(firestoreResult.exceptionOrNull()?.message ?: "Error storing user data")
@@ -63,6 +64,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                             image == null -> onNavigate("uploadPhotos")
                             else -> onNavigate("navBar")
                         }
+                        authRepository.updateFCM()
                         Toast.makeText(context, "Sign In Successful", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(context, userDocumentResult.exceptionOrNull()?.message ?: "Error retrieving user data", Toast.LENGTH_SHORT).show()
