@@ -85,6 +85,7 @@ fun NearbyScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .fillMaxHeight()
                             .padding(horizontal = 16.dp)
                             .aspectRatio(0.75f)
                             .clip(MaterialTheme.shapes.medium)

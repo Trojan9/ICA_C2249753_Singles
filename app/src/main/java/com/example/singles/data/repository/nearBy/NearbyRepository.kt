@@ -86,34 +86,72 @@ class NearbyRepository(private val firestore: FirebaseFirestore) {
         return chatId
     }
 
-    suspend fun fetchLikedProfiles(currentUserId: String): List<Map<String, Any>> {
-        // Query the "likesFrom" subcollection under the current user's document
-        val likesSnapshot = firestore.collection("likes")
-            .document(currentUserId)
-            .collection("likesFrom")
-            .get()
-            .await()
+//    suspend fun fetchLikedProfiles(currentUserId: String): List<Map<String, Any>> {
+//        val likedProfiles = mutableListOf<Map<String, Any>>()
 
-        // Extract the IDs of users the current user has liked
-        val likedUserIds = likesSnapshot.documents.mapNotNull { it.id }
+//        // Fetch all documents in the "likes" collection
+//        val likesSnapshot = firestore.collection("likes").get().await()
+//
+//        // Iterate through each document in the "likes" collection
+//        for (document in likesSnapshot.documents) {
+//            val profileId = document.id // The ID of the profile being liked
+//
+//            // Query the "likesFrom" subcollection of the current document
+//            val subCollectionSnapshot = firestore.collection("likes")
+//                .document(profileId)
+//                .collection("likesFrom")
+//                .whereEqualTo("likedBy", currentUserId)
+//                .get()
+//                .await()
+//
+//            // If there's a document in "likesFrom" where "likedBy" matches currentUserId
+//            if (subCollectionSnapshot.documents.isNotEmpty()) {
+//                println("not empty")
+//                // Fetch the user's profile from the "users" collection
+//                val userProfile = firestore.collection("users")
+//                    .document(profileId)
+//                    .get()
+//                    .await()
+//
+//                // Add the profile data to the results list
+//                userProfile.data?.let { data ->
+//                    val profileData = data.toMutableMap()
+//                    profileData["userId"] = userProfile.id // Add the user ID to the profile
+//                    likedProfiles.add(profileData)
+//                }
+//            }
+//        }
 
-        if (likedUserIds.isEmpty()) {
-            return emptyList()
-        }
+//        return likedProfiles
+//    }
+suspend fun fetchLikedProfiles(currentUserId: String): List<Map<String, Any>> {
+    // Query the "likesFrom" subcollection under the current user's document
+    val likesSnapshot = firestore.collection("likes")
+        .document(currentUserId)
+        .collection("likesFrom")
+        .get()
+        .await()
 
-        // Fetch the corresponding profiles from the "users" collection
-        val profilesSnapshot = firestore.collection("users")
-            .whereIn(FieldPath.documentId(), likedUserIds)
-            .get()
-            .await()
+    // Extract the IDs of users the current user has liked
+    val likedUserIds = likesSnapshot.documents.mapNotNull { it.id }
 
-        // Map the profiles to a list of data
-        return profilesSnapshot.documents.mapNotNull { document ->
-            val profileData = document.data.orEmpty().toMutableMap()
-            profileData["userId"] = document.id // Add the document ID as "userId"
-            profileData
-        }
+    if (likedUserIds.isEmpty()) {
+        return emptyList()
     }
+
+    // Fetch the corresponding profiles from the "users" collection
+    val profilesSnapshot = firestore.collection("users")
+        .whereIn(FieldPath.documentId(), likedUserIds)
+        .get()
+        .await()
+
+    // Map the profiles to a list of data
+    return profilesSnapshot.documents.mapNotNull { document ->
+        val profileData = document.data.orEmpty().toMutableMap()
+        profileData["userId"] = document.id // Add the document ID as "userId"
+        profileData
+    }
+}
 
 
 
