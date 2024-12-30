@@ -25,11 +25,16 @@ class NearbyViewModel(private val repository: NearbyRepository) : ViewModel() {
     private val _likedProfiles = MutableStateFlow<List<Map<String, Any>>>(emptyList())
     val likedProfiles: StateFlow<List<Map<String, Any>>> = _likedProfiles
 
+    init {
+
+    }
+
     fun fetchNearbyProfiles(currentUserId: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 val fetchedProfiles = repository.fetchNearbyProfiles(currentUserId)
+                fetchLikedProfiles(currentUserId);
                 _profiles.value = fetchedProfiles
             } catch (e: Exception) {
                 _errorMessage.value = e.message

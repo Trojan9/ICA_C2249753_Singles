@@ -4,6 +4,7 @@ package com.example.singles.presentation.profile
 import android.content.Context
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.singles.domain.model.UserProfile
@@ -23,6 +24,7 @@ class ProfileViewModel(private val profileRepository: ProfileRepository, private
     // Expose userProfile as a StateFlow to be observed in ProfileScreen
     private val _userProfile = MutableStateFlow<UserProfile?>(null)
     val userProfile: StateFlow<UserProfile?> get() = _userProfile
+
 
 
     fun updateUserProfile(onSuccess: () -> Unit,onFailure: (String) -> Unit,map: Map<String, Any>) {
@@ -82,7 +84,25 @@ class ProfileViewModel(private val profileRepository: ProfileRepository, private
             _profileState.value = ProfileState.Error("User not found")
         }
     }
-
+    fun updateUserProfileField(fieldKey: String, newValue: Any) {
+        val currentProfile = _userProfile.value
+        if (currentProfile != null) {
+            val updatedProfile = when (fieldKey) {
+                "age" -> currentProfile.copy(age = newValue as String)
+                "displayName" -> currentProfile.copy(displayName = newValue as String)
+                "fullName" -> currentProfile.copy(fullName = newValue as String)
+                "gender" -> currentProfile.copy(gender = newValue as String)
+                "image0" -> currentProfile.copy(image0 = newValue as String)
+                "image1" -> currentProfile.copy(image1 = newValue as String)
+                "image2" -> currentProfile.copy(image2 = newValue as String)
+                "image3" -> currentProfile.copy(image3 = newValue as String)
+                "institution" -> currentProfile.copy(institution = newValue as String)
+                "isAgreed" -> currentProfile.copy(isAgreed = newValue as Boolean)
+                else -> currentProfile
+            }
+            _userProfile.value = updatedProfile
+        }
+    }
     fun updateUniversity(onSuccess: () -> Unit,onFailure: (String) -> Unit,institution:String) {
         _profileState.value = ProfileState.Loading
         val userId = (authRepository.getCurrentUser())
@@ -104,7 +124,7 @@ class ProfileViewModel(private val profileRepository: ProfileRepository, private
         }
     }
 
-    fun uploadImage(imageUri: Uri,index:Int) {
+    fun uploadImage(imageUri: Uri,index:Int,context: Context ) {
         val userId = (authRepository.getCurrentUser())?.uid
         if (userId != null) {
             _profileState.value = ProfileState.Loading
@@ -112,9 +132,16 @@ class ProfileViewModel(private val profileRepository: ProfileRepository, private
                 val result = profileRepository.uploadImageToStorage(imageUri, userId,index.toString())
                 if (result.isSuccess) {
                     _profileState.value = ProfileState.Success(result.getOrNull() ?: "")
-                    _profileState.value= ProfileState.Idle
+                    // Show Toast for upload success or error
+                        Toast.makeText(context, "upload successful", Toast.LENGTH_SHORT).show()
+                        stopLoader()
+
                 } else {
                     _profileState.value = ProfileState.Error(result.exceptionOrNull()?.message ?: "Failed to upload image")
+
+                        val errorMessage = result.exceptionOrNull()?.message ?: "Failed to upload image"
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+
                 }
             }
         } else {

@@ -138,8 +138,16 @@ fun NearbyScreen(
                     ) {
                         AsyncImage(
                             model =profile["image0"], // Dynamic URL or Firebase path
-                            placeholder = painterResource(id = R.drawable.usermatch), // Placeholder image
-                            error = painterResource(id = R.drawable.usermatch), // Error fallback image
+                            placeholder = painterResource(id =if (profile["gender"] == "female") {
+                                R.drawable.female_avatar
+                            } else {
+                                R.drawable.male_avatar
+                            }), // Placeholder image
+                            error = painterResource(id = if (profile["gender"] == "female") {
+                                R.drawable.female_avatar
+                            } else {
+                                R.drawable.male_avatar
+                            }), // Error fallback image
                             contentDescription = "Profile Picture",
 
                             contentScale = ContentScale.Crop,

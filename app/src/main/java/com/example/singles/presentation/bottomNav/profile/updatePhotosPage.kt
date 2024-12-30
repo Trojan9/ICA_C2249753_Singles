@@ -1,5 +1,6 @@
 package com.example.singles.presentation.bottomNav.profile
 
+import android.Manifest
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,12 +24,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.navigation.NavController
-import coil.compose.rememberImagePainter
+import coil.compose.rememberAsyncImagePainter
+
 import com.example.singles.R
 import com.example.singles.presentation.profile.ProfileState
 import com.example.singles.presentation.profile.ProfileViewModel
-import com.example.singles.domain.model.UserProfile
+
 import java.io.File
 
 @Composable
@@ -38,7 +41,6 @@ fun UpdatePhotosPage(navController: NavController, profileViewModel: ProfileView
     profileViewModel.stopLoader()
     var isImageUploaded by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
-
     // Update isImageUploaded when profileState indicates a successful upload
     if (profileState is ProfileState.Success) {
         isImageUploaded = true
@@ -113,11 +115,11 @@ fun UpdatePhotosPage(navController: NavController, profileViewModel: ProfileView
                 .fillMaxWidth()
                 .height(48.dp)
         ) {
-            Text(text = "Save", color = Color.White)
+            Text(text = if (profileState is ProfileState.Loading) "Uploading..." else "Save", color = Color.White)
         }
+
     }
 }
-
 @Composable
 fun PhotoPlaceholder(profileViewModel: ProfileViewModel, imageUrl: String?, index: Int) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -129,22 +131,45 @@ fun PhotoPlaceholder(profileViewModel: ProfileViewModel, imageUrl: String?, inde
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             selectedImageUri = it
-            profileViewModel.uploadImage(it, index) // Start upload
+            profileViewModel.uploadImage(it, index,context) // Start upload
         }
     }
 
-    // Temporary URI for storing the captured image from the camera
-    val tempImageUri = remember {
-        Uri.fromFile(File.createTempFile("temp_image", ".jpg", context.cacheDir))
+    // Create a temporary file for the captured image
+    val tempImageFile = remember {
+        File(context.cacheDir, "temp_image_${System.currentTimeMillis()}.jpg").apply {
+            createNewFile()
+            deleteOnExit()
+        }
     }
 
+    // Use FileProvider to create a secure URI for the temporary file
+    val tempImageUri = remember {
+        FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            tempImageFile
+        )
+    }
     // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
             selectedImageUri = tempImageUri
-            profileViewModel.uploadImage(tempImageUri, index) // Start upload
+            profileViewModel.uploadImage(tempImageUri, index,context)
         }
     }
+    // Permission Launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Launch camera if permission is granted
+            cameraLauncher.launch(tempImageUri)
+        } else {
+            Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     Box(
         modifier = Modifier
@@ -162,7 +187,7 @@ fun PhotoPlaceholder(profileViewModel: ProfileViewModel, imageUrl: String?, inde
             is ProfileState.Success -> {
                 // Display uploaded image
                 Image(
-                    painter = rememberImagePainter(selectedImageUri ?: imageUrl),
+                    painter = rememberAsyncImagePainter(selectedImageUri ?: imageUrl),
                     contentDescription = "Uploaded Image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -172,7 +197,7 @@ fun PhotoPlaceholder(profileViewModel: ProfileViewModel, imageUrl: String?, inde
             }
             else -> {
                 Image(
-                    painter = rememberImagePainter(data = selectedImageUri ?: imageUrl),
+                    painter = rememberAsyncImagePainter(model = selectedImageUri ?: imageUrl),
                     contentDescription = "Selected Image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -198,14 +223,7 @@ fun PhotoPlaceholder(profileViewModel: ProfileViewModel, imageUrl: String?, inde
             )
         }
 
-        // Show Toast for upload success or error
-        if (profileState is ProfileState.Error) {
-            val errorMessage = (profileState as ProfileState.Error).message
-            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-        } else if (profileState is ProfileState.Success) {
-            Toast.makeText(context, "Upload successful!", Toast.LENGTH_SHORT).show()
-            profileViewModel.stopLoader()
-        }
+
     }
 
     // Show the image picker dialog if showDialog is true
@@ -216,10 +234,10 @@ fun PhotoPlaceholder(profileViewModel: ProfileViewModel, imageUrl: String?, inde
                 showDialog = false // Close dialog after selection
             },
             onCameraClick = {
-                cameraLauncher.launch(tempImageUri)
+                permissionLauncher.launch(Manifest.permission.CAMERA)
+
                 showDialog = false // Close dialog after selection
-            },
-            tempImageUri = tempImageUri
+            }
         )
     }
 }
@@ -227,8 +245,7 @@ fun PhotoPlaceholder(profileViewModel: ProfileViewModel, imageUrl: String?, inde
 @Composable
 fun showImagePickerDialog(
     onGalleryClick: () -> Unit,
-    onCameraClick: (Uri) -> Unit,
-    tempImageUri: Uri
+    onCameraClick: () -> Unit
 ) {
     var showDialog by remember { mutableStateOf(true) }
 
@@ -246,7 +263,7 @@ fun showImagePickerDialog(
                     }
                     TextButton(onClick = {
                         showDialog = false
-                        onCameraClick(tempImageUri) // Launch camera with URI
+                        onCameraClick() // Launch camera
                     }) {
                         Text("Take a Photo")
                     }

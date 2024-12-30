@@ -125,23 +125,24 @@ class NearbyRepository(private val firestore: FirebaseFirestore) {
 //        return likedProfiles
 //    }
 suspend fun fetchLikedProfiles(currentUserId: String): List<Map<String, Any>> {
-    // Query the "likesFrom" subcollection under the current user's document
-    val likesSnapshot = firestore.collection("likes")
-        .document(currentUserId)
-        .collection("likesFrom")
+
+    // Query the "likes" collection for documents with subcollection "likesFrom" where "likedBy" equals currentUserId
+    val likesQuery = firestore.collectionGroup("likesFrom") // Use collectionGroup to search across all subcollections named "likesFrom"
+        .whereEqualTo("likedBy", currentUserId) // Filter where likedBy matches the current user's ID
         .get()
         .await()
+    println("this is size")
 
-    // Extract the IDs of users the current user has liked
-    val likedUserIds = likesSnapshot.documents.mapNotNull { it.id }
+    // Extract the user IDs from the query results
+    val userIds = likesQuery.documents.mapNotNull { it.reference.parent.parent?.id }
 
-    if (likedUserIds.isEmpty()) {
+    if (userIds.isEmpty()) {
         return emptyList()
     }
 
     // Fetch the corresponding profiles from the "users" collection
     val profilesSnapshot = firestore.collection("users")
-        .whereIn(FieldPath.documentId(), likedUserIds)
+        .whereIn(FieldPath.documentId(), userIds)
         .get()
         .await()
 

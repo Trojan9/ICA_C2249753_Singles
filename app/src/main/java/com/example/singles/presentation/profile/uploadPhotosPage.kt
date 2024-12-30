@@ -1,5 +1,6 @@
 package com.example.singles.presentation.profile
 
+import android.Manifest
 import android.net.Uri
 import android.provider.MediaStore
 import android.widget.Toast
@@ -24,7 +25,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.example.singles.R
 import java.io.File
@@ -96,56 +99,78 @@ fun UploadPhotosPage(navController: NavController, onContinueClick: () -> Unit, 
                 .fillMaxWidth()
                 .height(48.dp)
         ) {
-            Text(text = "Continue", color = Color.White)
+            Text(text = if (profileState is ProfileState.Loading) "Uploading..." else "Continue", color = Color.White)
         }
     }
 }
 @Composable
-fun PhotoPlaceholder(profileViewModel: ProfileViewModel,index:Int) {
+fun PhotoPlaceholder(profileViewModel: ProfileViewModel, index: Int) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val profileState by profileViewModel.profileState.collectAsState()
     val context = LocalContext.current
-    var showDialog by remember { mutableStateOf(false) } // State to control dialog visibility
+    var showDialog by remember { mutableStateOf(false) }
 
     // Gallery launcher
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             selectedImageUri = it
-            profileViewModel.uploadImage(it,index) // Start upload
+            profileViewModel.uploadImage(it, index, context = context) // Start upload
         }
     }
 
-    // Temporary URI for storing the captured image from the camera
-    val tempImageUri = remember {
-        Uri.fromFile(File.createTempFile("temp_image", ".jpg", context.cacheDir))
+    // Create a temporary file for the captured image
+    val tempImageFile = remember {
+        File(context.cacheDir, "temp_image_${System.currentTimeMillis()}.jpg").apply {
+            createNewFile()
+            deleteOnExit()
+        }
     }
 
+    // Use FileProvider to create a secure URI for the temporary file
+    val tempImageUri = remember {
+        FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            tempImageFile
+        )
+    }
     // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
             selectedImageUri = tempImageUri
-            profileViewModel.uploadImage(tempImageUri,index) // Start upload
+            profileViewModel.uploadImage(tempImageUri, index, context = context)
         }
     }
+    // Permission Launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Launch camera if permission is granted
+            cameraLauncher.launch(tempImageUri)
+        } else {
+            Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     Box(
         modifier = Modifier
             .size(120.dp)
             .clip(CircleShape)
             .background(Color.White)
-            .clickable {
-                showDialog = true // Set dialog visibility to true on click
-            },
+            .clickable { showDialog = true }, // Show dialog on click
         contentAlignment = Alignment.Center
     ) {
-        // Display Upload Progress
+        // Display Upload Progress or Image
         when (profileState) {
             is ProfileState.Loading -> {
                 CircularProgressIndicator(modifier = Modifier.size(50.dp))
             }
             is ProfileState.Success -> {
+                // Display uploaded image
                 Image(
-                    painter = rememberImagePainter(selectedImageUri),
+                    painter = rememberAsyncImagePainter(selectedImageUri),
                     contentDescription = "Uploaded Image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -154,23 +179,14 @@ fun PhotoPlaceholder(profileViewModel: ProfileViewModel,index:Int) {
                 )
             }
             else -> {
-                if (selectedImageUri != null) {
-                    Image(
-                        painter = rememberImagePainter(selectedImageUri),
-                        contentDescription = "Selected Image",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                            .background(Color.Gray)
-                    )
-                }
+                Image(
+                    painter = rememberAsyncImagePainter(model = selectedImageUri),
+                    contentDescription = "Selected Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                )
             }
         }
 
@@ -190,16 +206,14 @@ fun PhotoPlaceholder(profileViewModel: ProfileViewModel,index:Int) {
             )
         }
 
-        // Show Toast for upload success or error
-        if (profileState is ProfileState.Error) {
-            val errorMessage = (profileState as ProfileState.Error).message
-            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-        } else if (profileState is ProfileState.Success) {
-            val downloadUrl = (profileState as ProfileState.Success).response
-            Toast.makeText(context, "Upload successful!", Toast.LENGTH_SHORT).show()
-            profileViewModel.stopLoader()
-
-        }
+//        // Show Toast for upload success or error
+//        if (profileState is ProfileState.Error) {
+//            val errorMessage = (profileState as ProfileState.Error).message
+//            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+//        } else if (profileState is ProfileState.Success) {
+//            Toast.makeText(context, "Upload successful!", Toast.LENGTH_SHORT).show()
+//            profileViewModel.stopLoader()
+//        }
     }
 
     // Show the image picker dialog if showDialog is true
@@ -210,20 +224,18 @@ fun PhotoPlaceholder(profileViewModel: ProfileViewModel,index:Int) {
                 showDialog = false // Close dialog after selection
             },
             onCameraClick = {
-                cameraLauncher.launch(tempImageUri)
+                permissionLauncher.launch(Manifest.permission.CAMERA)
+
                 showDialog = false // Close dialog after selection
-            },
-            tempImageUri = tempImageUri
+            }
         )
     }
 }
 
-
 @Composable
 fun showImagePickerDialog(
     onGalleryClick: () -> Unit,
-    onCameraClick: (Uri) -> Unit,
-    tempImageUri: Uri
+    onCameraClick: () -> Unit
 ) {
     var showDialog by remember { mutableStateOf(true) }
 
@@ -241,7 +253,7 @@ fun showImagePickerDialog(
                     }
                     TextButton(onClick = {
                         showDialog = false
-                        onCameraClick(tempImageUri) // Launch camera with URI
+                        onCameraClick() // Launch camera
                     }) {
                         Text("Take a Photo")
                     }

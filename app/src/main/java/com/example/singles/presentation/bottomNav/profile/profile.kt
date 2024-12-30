@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Edit
@@ -24,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -71,6 +73,12 @@ fun ProfileScreen(
                     AsyncImage(
                         model = userProfile?.image0,
                         contentDescription = "Profile Image",
+                        placeholder = painterResource(id =
+                            R.drawable.neutral_avatar
+                        ), // Placeholder image
+                        error = painterResource(id =
+                            R.drawable.neutral_avatar
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(1f)
@@ -180,7 +188,9 @@ fun ProfileScreen(
             onDismiss = { showDialog = false },
             onSave = { newValue ->
                 val fieldMap = mapOf(dialogFieldKey to newValue)
+                profileViewModel.updateUserProfileField(dialogFieldKey,newValue)
                 updateProfileField(fieldMap, profileViewModel, context)
+
                 showDialog = false
             }
         )
@@ -258,18 +268,46 @@ fun EditFieldDialog(
     onSave: (String) -> Unit
 ) {
     var text by remember { mutableStateOf(initialValue) }
-
+    var isGenderDropdownExpanded by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(text = title) },
         text = {
+if(title=="Gender") {
+    OutlinedButton(
+        onClick = { isGenderDropdownExpanded = true },
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFBB296))
+    ) {
+        Text(text = text, color = Color.Gray, modifier = Modifier.weight(1f))
+        DropdownMenu(
+            expanded = isGenderDropdownExpanded,
+            onDismissRequest = { isGenderDropdownExpanded = false }
+        ) {
+            DropdownMenuItem(onClick = {
+                text = "Male"
+                isGenderDropdownExpanded = false
+            }, text = {
+                Text("Male", color = Color.Gray)
+            })
+            DropdownMenuItem(onClick = {
+                text = "Female"
+                isGenderDropdownExpanded = false
+            }, text = {
+                Text("Female", color = Color.Gray)
+            })
+        }
+    }
+}else{
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
                 label = { Text(text = title) },
+                keyboardOptions =if(title=="Age"){ KeyboardOptions(keyboardType = KeyboardType.Number)}else{KeyboardOptions(keyboardType = KeyboardType.Text)},
                 singleLine = true
             )
-        },
+        }},
         confirmButton = {
             TextButton(onClick = { onSave(text) }) {
                 Text("OK")
