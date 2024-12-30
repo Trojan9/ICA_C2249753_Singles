@@ -1,5 +1,6 @@
 package com.example.singles.presentation.mainScreen
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -147,10 +148,33 @@ fun MainScreen(userName: String?, chatId: String?) {
                 }
                 composable("verificationEmail") {
                     VerificationEmailPage(
-                        onNextClick = { navController.navigate("university") },
+                        onNextClick = {
+                            val currentUser = FirebaseAuth.getInstance().currentUser
+                            currentUser?.reload()?.addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    if (currentUser.isEmailVerified) {
+                                        navController.navigate("university")
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            "Please verify your email before proceeding.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Failed to check email verification status. Try again later.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        },
                         authViewModel = authViewModel
                     )
                 }
+
+
                 composable("university") {
                     UniversityPage(
                         onContinueClick = { navController.navigate("uploadPhotos") },

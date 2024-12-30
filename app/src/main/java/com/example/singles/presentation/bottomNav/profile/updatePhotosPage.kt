@@ -109,7 +109,7 @@ fun UpdatePhotosPage(navController: NavController, profileViewModel: ProfileView
         // Save Button
         Button(
             onClick = { navController.popBackStack() },
-            enabled = isImageUploaded,
+            enabled = true,
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBB296)),
             modifier = Modifier
                 .fillMaxWidth()

@@ -135,6 +135,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
 
     }
+
 }
 
 sealed class AuthState {

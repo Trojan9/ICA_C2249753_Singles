@@ -37,10 +37,7 @@ fun UploadPhotosPage(navController: NavController, onContinueClick: () -> Unit, 
     val profileState by profileViewModel.profileState.collectAsState()
     var isImageUploaded by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
-    // Update isImageUploaded when profileState indicates a successful upload
-    if (profileState is ProfileState.Success) {
-        isImageUploaded = true
-    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -71,8 +68,12 @@ fun UploadPhotosPage(navController: NavController, onContinueClick: () -> Unit, 
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            PhotoPlaceholder(profileViewModel,0)
-            PhotoPlaceholder(profileViewModel,1)
+            PhotoPlaceholder(profileViewModel,0, onUploadDone = {
+                isImageUploaded = true
+            })
+            PhotoPlaceholder(profileViewModel,1,onUploadDone = {
+                isImageUploaded = true
+            })
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -80,8 +81,12 @@ fun UploadPhotosPage(navController: NavController, onContinueClick: () -> Unit, 
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            PhotoPlaceholder(profileViewModel,2)
-            PhotoPlaceholder(profileViewModel,3)
+            PhotoPlaceholder(profileViewModel,2,onUploadDone = {
+                isImageUploaded = true
+            })
+            PhotoPlaceholder(profileViewModel,3,onUploadDone = {
+                isImageUploaded = true
+            })
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -104,7 +109,7 @@ fun UploadPhotosPage(navController: NavController, onContinueClick: () -> Unit, 
     }
 }
 @Composable
-fun PhotoPlaceholder(profileViewModel: ProfileViewModel, index: Int) {
+fun PhotoPlaceholder(profileViewModel: ProfileViewModel, index: Int,onUploadDone: () -> Unit ) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val profileState by profileViewModel.profileState.collectAsState()
     val context = LocalContext.current
@@ -115,6 +120,7 @@ fun PhotoPlaceholder(profileViewModel: ProfileViewModel, index: Int) {
         uri?.let {
             selectedImageUri = it
             profileViewModel.uploadImage(it, index, context = context) // Start upload
+            onUploadDone()
         }
     }
 
@@ -139,6 +145,7 @@ fun PhotoPlaceholder(profileViewModel: ProfileViewModel, index: Int) {
         if (success) {
             selectedImageUri = tempImageUri
             profileViewModel.uploadImage(tempImageUri, index, context = context)
+            onUploadDone()
         }
     }
     // Permission Launcher

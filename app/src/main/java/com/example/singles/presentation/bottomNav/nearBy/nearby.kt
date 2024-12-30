@@ -136,8 +136,12 @@ fun NearbyScreen(
                                 )
                             }
                     ) {
+                        val profileImage = profile["image0"] as? String ?:
+                        profile["image1"] as? String ?:
+                        profile["image2"] as? String ?:
+                        profile["image3"] as? String ?: ""
                         AsyncImage(
-                            model =profile["image0"], // Dynamic URL or Firebase path
+                            model =profileImage, // Dynamic URL or Firebase path
                             placeholder = painterResource(id =if (profile["gender"] == "female") {
                                 R.drawable.female_avatar
                             } else {

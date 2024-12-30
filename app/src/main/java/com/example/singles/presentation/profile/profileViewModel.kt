@@ -5,6 +5,10 @@ import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.singles.domain.model.UserProfile
@@ -24,6 +28,8 @@ class ProfileViewModel(private val profileRepository: ProfileRepository, private
     // Expose userProfile as a StateFlow to be observed in ProfileScreen
     private val _userProfile = MutableStateFlow<UserProfile?>(null)
     val userProfile: StateFlow<UserProfile?> get() = _userProfile
+    private val _isImageUploaded = MutableStateFlow<Boolean>(false)
+    val isImageUploaded : StateFlow<Boolean> get() = _isImageUploaded
 
 
 
@@ -123,7 +129,9 @@ class ProfileViewModel(private val profileRepository: ProfileRepository, private
 
         }
     }
-
+fun initUpload(){
+    _isImageUploaded.value= false
+}
     fun uploadImage(imageUri: Uri,index:Int,context: Context ) {
         val userId = (authRepository.getCurrentUser())?.uid
         if (userId != null) {
@@ -134,8 +142,8 @@ class ProfileViewModel(private val profileRepository: ProfileRepository, private
                     _profileState.value = ProfileState.Success(result.getOrNull() ?: "")
                     // Show Toast for upload success or error
                         Toast.makeText(context, "upload successful", Toast.LENGTH_SHORT).show()
+                        _isImageUploaded.value = true
                         stopLoader()
-
                 } else {
                     _profileState.value = ProfileState.Error(result.exceptionOrNull()?.message ?: "Failed to upload image")
 
