@@ -107,6 +107,22 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     fun logOut() {
         authRepository.signOut()
     }
+    fun resetPassword(email: String, onSuccess: (String) -> Unit,onFailure: (String) -> Unit) {
+        _authState.value = AuthState.Loading
+        authRepository.resetPassword(email)
+            .addOnCompleteListener { task ->
+                viewModelScope.launch {
+                    if (task.isSuccessful) {
+                        _authState.value= AuthState.Idle
+                        onSuccess("Password reset email sent successfully.")
+                    } else {
+                        val errorMessage = task.exception?.localizedMessage ?: "An error occurred."
+                        _authState.value = AuthState.Error(errorMessage)
+                        onFailure(errorMessage)
+                    }
+                }
+            }
+    }
     fun sendEmailVerification() {
         val userEmail =  authRepository.sendEmailVerification();
         if (userEmail.isSuccess) {

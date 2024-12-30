@@ -138,7 +138,7 @@ fun LoginPage(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Forgot Password Text
-        TextButton(onClick = {}) {
+        TextButton(onClick = {onNavigate("forgotten")}) {
             Text(
                 text = "Forgot password? Reset",
                 color = Color.Black,

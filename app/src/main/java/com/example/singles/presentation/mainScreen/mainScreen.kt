@@ -35,6 +35,7 @@ import com.example.singles.presentation.profile.UniversityPage
 import com.example.singles.presentation.profile.UploadPhotosPage
 import com.example.singles.presentation.profile.VerificationEmailPage
 import com.example.singles.presentation.authentication.AuthenticateLayoutPage
+import com.example.singles.presentation.authentication.ForgotPasswordPage
 import com.example.singles.presentation.authentication.LoginPage
 import com.example.singles.presentation.authentication.SignUpPage
 import com.example.singles.presentation.authentication.WelcomePage
@@ -116,6 +117,15 @@ fun MainScreen(userName: String?, chatId: String?) {
                 composable("login") {
                     LoginPage(
                         onSignUpClick = { navController.navigate("signup") },
+                        onNavigate = { routeString ->
+                            navController.navigate(routeString)
+                        },
+                        authViewModel = authViewModel
+                    )
+                }
+                composable("forgotten") {
+                    ForgotPasswordPage(
+                        onNavigateBack = { navController.popBackStack() },
                         onNavigate = { routeString ->
                             navController.navigate(routeString)
                         },
