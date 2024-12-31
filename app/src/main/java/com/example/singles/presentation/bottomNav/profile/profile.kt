@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.Transgender
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.singles.R
+import com.example.singles.presentation.profile.DeleteState
 import com.example.singles.presentation.profile.ProfileState
 import com.example.singles.presentation.profile.ProfileViewModel
 
@@ -39,6 +41,7 @@ fun ProfileScreen(
     profileViewModel: ProfileViewModel,
     navController: NavController,
     onLogOut:()->Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     profileViewModel.stopLoader()
@@ -49,6 +52,36 @@ fun ProfileScreen(
     var dialogTitle by remember { mutableStateOf("") }
     var dialogValue by remember { mutableStateOf("") }
     var dialogFieldKey by remember { mutableStateOf("") }
+    var showConfirmationDialog by remember { mutableStateOf(false) }
+    val deleteState by profileViewModel.deleteState.observeAsState()
+
+    // Handle Delete State
+    when (deleteState) {
+        is DeleteState.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        is DeleteState.Success -> {
+            Toast.makeText(LocalContext.current, "Account deleted successfully", Toast.LENGTH_SHORT).show()
+            navController.navigate("login") {
+                popUpTo(0)
+            }
+            profileViewModel.stopLoader()
+        }
+
+        is DeleteState.Error -> {
+            val message = (deleteState as DeleteState.Error).message
+            Toast.makeText(LocalContext.current, message, Toast.LENGTH_LONG).show()
+            profileViewModel.stopLoader()
+        }
+
+        else -> Unit // No action needed for other states
+    }
 
     Column(
         modifier = modifier
@@ -171,13 +204,68 @@ fun ProfileScreen(
             editable = false
         )
         Spacer(modifier = Modifier.height(16.dp))
+        // Privacy Policy Button
         Button(
-            onClick = onLogOut,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBB296)), // Add color here
+            onClick = {
+                navController.navigate("privacyPolicy")
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Log Out", color = Color.White) // Optionally, set text color for better contrast
+            Text("Privacy Policy", color = Color.Black)
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Log Out and Delete Account Buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(
+                onClick = onLogOut,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBB296)),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Log Out", color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Button(
+                onClick = { showConfirmationDialog = true },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Delete Account", color = Color.White)
+            }
+
+            if (showConfirmationDialog) {
+                AlertDialog(
+                    onDismissRequest = { showConfirmationDialog = false },
+                    title = { Text(text = "Delete Account") },
+                    text = { Text("Are you sure you want to delete your account? This action cannot be undone.") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showConfirmationDialog = false
+                                onDelete() // Call the delete function
+                            }
+                        ) {
+                            Text("Yes, Delete", color = Color.Red)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { showConfirmationDialog = false }
+                        ) {
+                            Text("Cancel", color = Color.Gray)
+                        }
+                    }
+                )
+            }
+        }
+
     }
 
     // Show dialog for editing profile fields

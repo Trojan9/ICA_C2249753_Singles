@@ -1,5 +1,6 @@
 package com.example.singles.data.repository.authentication
 
+import android.util.Log
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -83,22 +84,72 @@ class AuthRepository(private val firebaseAuth: FirebaseAuth, private val firesto
         }
     }
     fun getCurrentUser(): FirebaseUser? {
+
         return firebaseAuth.currentUser
     }
 
-    fun signOut() {
+    fun  signOut() {
         firebaseAuth.signOut()
+
         firestore.clearPersistence()
     }
 
-suspend fun updateFCM(){
-    FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
-        FirebaseFirestore.getInstance()
-            .collection("users")
-            .document(firebaseAuth.currentUser?.uid!!)
-            .update("fcmToken", token)
+    fun updateFCM() {
+        val userId = firebaseAuth.currentUser?.uid
+        if (userId == null) {
+            Log.e("AuthRepository", "User is not authenticated. Cannot update FCM token.")
+            return
+        }
+
+        FirebaseMessaging.getInstance().token
+            .addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    Log.e("AuthRepository", "Fetching FCM token failed", task.exception)
+                    return@addOnCompleteListener
+                }
+
+                val token = task.result
+                if (token.isNullOrEmpty()) {
+                    Log.e("AuthRepository", "FCM token is null or empty.")
+                    return@addOnCompleteListener
+                }
+
+                FirebaseFirestore.getInstance()
+                    .collection("users")
+                    .document(userId)
+                    .update("fcmToken", token)
+                    .addOnSuccessListener {
+                        Log.d("AuthRepository", "FCM token successfully updated.")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("AuthRepository", "Failed to update FCM token in Firestore", e)
+                    }
+            }
     }
-}
+
+
+    suspend fun deleteUserDocuments(userId: String) {
+        // Delete main user document
+        firestore.collection("users").document(userId).delete().await()
+
+        // Cascade delete subcollections
+        val subcollections = listOf("likes", "matches", "messages") // Add your subcollections
+        subcollections.forEach { collection ->
+            val querySnapshot = firestore.collection(collection).whereEqualTo("userId", userId).get().await()
+            querySnapshot.documents.forEach { it.reference.delete().await() }
+        }
+    }
+
+    suspend fun deleteUserAuthentication(): Result<Unit> {
+        val user = firebaseAuth.currentUser ?: return Result.failure(Exception("No user logged in"))
+        return try {
+            firestore.clearPersistence()
+            user.delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
 
 }

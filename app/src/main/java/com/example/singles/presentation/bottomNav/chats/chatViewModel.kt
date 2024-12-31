@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.singles.data.entities.MessageEntity
 import com.example.singles.data.repository.chat.ChatRepository
 import com.example.singles.domain.model.Chat
+import com.example.singles.presentation.profile.ProfileViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -36,13 +37,15 @@ class ChatViewModel(private val chatRepository: ChatRepository) : ViewModel() {
         return userDetailsCache[chatId]
     }
 
-    fun fetchUserChats(userId: String) {
+    fun fetchUserChats(profileViewModel: ProfileViewModel) {
+        val userId = profileViewModel.getUserId()
         viewModelScope.launch {
             try {
+                _errorMessage.value = null
                 _isLoading.value = true
 
                 // Fetch all user chats
-                chatRepository.getUserChats(userId).collect { chats ->
+                chatRepository.getUserChats(userId!!).collect { chats ->
                     _chats.value = chats
 
                     // Fetch other user details for all chats
@@ -62,6 +65,7 @@ class ChatViewModel(private val chatRepository: ChatRepository) : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
+                print("this is it 1 $userId $e")
                 _errorMessage.value = e.message
             } finally {
                 _isLoading.value = false
@@ -83,6 +87,7 @@ class ChatViewModel(private val chatRepository: ChatRepository) : ViewModel() {
                     _messages.value = mergedMessages
                 }
             } catch (e: Exception) {
+                print("this is it 2 $e")
                 _errorMessage.value = e.message
             } finally {
                 _isLoading.value = false
@@ -134,6 +139,7 @@ class ChatViewModel(private val chatRepository: ChatRepository) : ViewModel() {
 //                }
 
             } catch (e: Exception) {
+                print("this is it 3 $e")
                 _errorMessage.value = e.message
             } finally {
                 _isLoading.value = false
@@ -185,6 +191,7 @@ class ChatViewModel(private val chatRepository: ChatRepository) : ViewModel() {
                 _isLoading.value = true
                 chatRepository.markMessagesAsSeen(chatId, userId)
             } catch (e: Exception) {
+                print("this is it 4 $e")
                 _errorMessage.value = e.message
             } finally {
                 _isLoading.value = false

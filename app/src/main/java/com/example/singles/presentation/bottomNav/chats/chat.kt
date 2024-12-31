@@ -30,17 +30,10 @@ fun ChatScreen(
     val chats by chatViewModel.chats.collectAsState()
     val isLoading by chatViewModel.isLoading.collectAsState()
     val errorMessage by chatViewModel.errorMessage.collectAsState()
-    val userId = profileViewModel.getUserId()
 
-    LaunchedEffect(userId) {
-        userId?.let {
-            chatViewModel.fetchUserChats(it) // Fetch user's chats on launch
-        }
-    }
 
     Column(modifier = modifier.fillMaxSize()) {
         // Header
-
         Text(
             text = "Messages",
             fontWeight = FontWeight.Bold,

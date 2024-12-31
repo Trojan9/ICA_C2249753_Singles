@@ -9,6 +9,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.singles.domain.model.UserProfile
@@ -31,7 +33,8 @@ class ProfileViewModel(private val profileRepository: ProfileRepository, private
     private val _isImageUploaded = MutableStateFlow<Boolean>(false)
     val isImageUploaded : StateFlow<Boolean> get() = _isImageUploaded
 
-
+    private val _deleteState = MutableLiveData<DeleteState>()
+    val deleteState: LiveData<DeleteState> = _deleteState
 
     fun updateUserProfile(onSuccess: () -> Unit,onFailure: (String) -> Unit,map: Map<String, Any>) {
         _profileState.value = ProfileState.Loading
@@ -129,6 +132,29 @@ class ProfileViewModel(private val profileRepository: ProfileRepository, private
 
         }
     }
+
+
+    fun deleteAccount( onComplete :()->Unit) {
+        viewModelScope.launch {
+            try {
+                _deleteState.value = DeleteState.Loading
+                val userId =  (authRepository.getCurrentUser())?.uid
+                    ?: throw Exception("No user logged in")
+
+                authRepository.deleteUserDocuments(userId)
+                val result = authRepository.deleteUserAuthentication()
+
+                if (result.isSuccess) {
+                    _deleteState.value = DeleteState.Success
+                    onComplete()
+                } else {
+                    throw result.exceptionOrNull() ?: Exception("Unknown error occurred")
+                }
+            } catch (e: Exception) {
+                _deleteState.value = DeleteState.Error(e.message ?: "Error deleting account")
+            }
+        }
+    }
 fun initUpload(){
     _isImageUploaded.value= false
 }
@@ -159,14 +185,16 @@ fun initUpload(){
 
     fun stopLoader(){
         _profileState.value= ProfileState.Idle
+        _deleteState.value = DeleteState.Idle
     }
     fun getUserId():String?{
         return (authRepository.getCurrentUser())?.uid;
     }
 
-    fun logOut(){
+    fun logOut(onComplete: () -> Unit){
         _profileState.value = ProfileState.Loading
          authRepository.signOut();
+        onComplete()
         _profileState.value= ProfileState.Idle
     }
 
@@ -177,4 +205,11 @@ sealed class ProfileState {
     data object Loading : ProfileState()
     data class Success(val response: Any) : ProfileState()
     data class Error(val message: String) : ProfileState()
+}
+
+sealed class DeleteState {
+    object Loading : DeleteState()
+    data object Idle : DeleteState()
+    object Success : DeleteState()
+    data class Error(val message: String) : DeleteState()
 }

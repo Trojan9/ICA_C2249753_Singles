@@ -15,6 +15,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.singles"
+        multiDexEnabled = true
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -66,8 +67,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("com.android.support:support-annotations:28.0.0")
-
-
+    implementation ("androidx.compose.runtime:runtime-livedata:1.7.6")
 
     // Testing libraries
     testImplementation("junit:junit:4.13.2")
@@ -145,6 +145,11 @@ dependencies {
 
     implementation ("com.google.firebase:firebase-crashlytics:19.2.1")
     implementation ("com.google.firebase:firebase-analytics:22.1.2")
+
+
+    implementation ("androidx.multidex:multidex:2.0.1")
+
+
 
 
 

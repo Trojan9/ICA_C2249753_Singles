@@ -46,6 +46,7 @@ class ChatRepository(
 
     // Fetch user chats
     fun getUserChats(userId: String): Flow<List<Chat>> = callbackFlow {
+
         val listenerRegistration = firestore.collection("chats")
             .whereArrayContains("participants", userId)
             .addSnapshotListener { snapshot, error ->

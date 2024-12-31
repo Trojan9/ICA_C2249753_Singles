@@ -19,12 +19,10 @@ import com.example.singles.presentation.bottomNav.profile.ProfileScreen
 import com.example.singles.presentation.profile.ProfileViewModel
 
 @Composable
-fun bottomNavigation(navController: NavController, profileViewModel: ProfileViewModel,chatViewModel: ChatViewModel,onLogOut: () -> Unit,nearbyViewModel: NearbyViewModel) {
+fun bottomNavigation(navController: NavController, profileViewModel: ProfileViewModel,chatViewModel: ChatViewModel,onLogOut: () -> Unit,nearbyViewModel: NearbyViewModel,onDelete: () -> Unit,) {
     var selectedTab by remember { mutableStateOf("Nearby") }
-profileViewModel.getUserProfile()
-
     val currentUserId = profileViewModel.getUserId()
-    nearbyViewModel.fetchLikedProfiles(currentUserId!!)
+
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
@@ -49,7 +47,7 @@ profileViewModel.getUserProfile()
             )
 
             "Chats" -> ChatScreen(modifier = Modifier.padding(innerPadding),navController = navController, chatViewModel = chatViewModel,profileViewModel=profileViewModel)
-            "Profile" -> ProfileScreen(modifier = Modifier.padding(innerPadding),profileViewModel=profileViewModel, navController = navController, onLogOut = onLogOut)
+            "Profile" -> ProfileScreen(modifier = Modifier.padding(innerPadding),profileViewModel=profileViewModel, navController = navController, onLogOut = onLogOut,onDelete=onDelete)
         }
     }
 }

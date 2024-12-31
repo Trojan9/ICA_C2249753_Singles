@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -44,6 +45,7 @@ import com.example.singles.presentation.bottomNav.chats.ChatDetailScreen
 import com.example.singles.presentation.bottomNav.chats.ChatViewModel
 import com.example.singles.presentation.bottomNav.likes.ProfileDetailScreen
 import com.example.singles.presentation.bottomNav.nearBy.NearbyViewModel
+import com.example.singles.presentation.bottomNav.profile.PrivacyPolicyPage
 import com.example.singles.presentation.bottomNav.profile.UpdatePhotosPage
 import com.example.singles.presentation.bottomNavigation
 import com.example.singles.presentation.profile.ProfileViewModel
@@ -174,7 +176,13 @@ fun MainScreen(userName: String?, chatId: String?) {
                     )
                 }
 
-
+                composable("privacyPolicy") {
+                    PrivacyPolicyPage(
+                        onBack = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
                 composable("university") {
                     UniversityPage(
                         onContinueClick = { navController.navigate("uploadPhotos") },
@@ -195,17 +203,50 @@ fun MainScreen(userName: String?, chatId: String?) {
                     )
                 }
                 composable("navBar") {
-                    bottomNavigation(
-                        profileViewModel = profileViewModel,
-                        navController = navController,
-                        chatViewModel = chatViewModel,
-                        nearbyViewModel = nearByViewModel,
-                        onLogOut = {
-                            profileViewModel.logOut()
-                            initializationKey++ // Change the key to trigger reinitialization
+                    val currentUserId = profileViewModel.getUserId()
+
+                    if (currentUserId != null) {
+                        // Fetch liked profiles only if currentUserId is not null
+                        LaunchedEffect(currentUserId) {
+                            nearByViewModel.fetchLikedProfiles(currentUserId)
+                            println(" this is it $currentUserId")
+                                chatViewModel.fetchUserChats(profileViewModel= profileViewModel) // Fetch user's chats on launch
+
                         }
-                    )
+
+                        bottomNavigation(
+                            profileViewModel = profileViewModel,
+                            navController = navController,
+                            chatViewModel = chatViewModel,
+                            nearbyViewModel = nearByViewModel,
+                            onLogOut = {
+                                profileViewModel.logOut(
+                                    onComplete = {
+                                        navController.navigate("login") { popUpTo(0) } // Navigate to login after logout
+                                        initializationKey++ // Trigger reinitialization
+                                        firestore.clearPersistence()
+
+                                    }
+                                )
+
+                            },
+                            onDelete = {
+                                profileViewModel.deleteAccount(onComplete = {
+                                    navController.navigate("login") { popUpTo(0) } // Navigate to login after logout
+                                    initializationKey++ // Trigger reinitialization
+                                    firestore.clearPersistence()
+                                })
+
+                            }
+                        )
+                    } else {
+                        // If user is not logged in, navigate to login
+                        LaunchedEffect(Unit) {
+                            navController.navigate("login") { popUpTo(0) }
+                        }
+                    }
                 }
+
                 composable(
                     route = "chat_detail/{userName}/{chatId}",
                     arguments = listOf(
