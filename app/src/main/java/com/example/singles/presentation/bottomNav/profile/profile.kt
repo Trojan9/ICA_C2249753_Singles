@@ -44,7 +44,7 @@ fun ProfileScreen(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    profileViewModel.stopLoader()
+
     val profileState by profileViewModel.profileState.collectAsState()
     val userProfile by profileViewModel.userProfile.collectAsState()
     val context = LocalContext.current
@@ -248,8 +248,9 @@ fun ProfileScreen(
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                showConfirmationDialog = false
                                 onDelete() // Call the delete function
+                                showConfirmationDialog = false
+
                             }
                         ) {
                             Text("Yes, Delete", color = Color.Red)

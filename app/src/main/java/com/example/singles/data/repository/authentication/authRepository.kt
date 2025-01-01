@@ -130,7 +130,54 @@ class AuthRepository(private val firebaseAuth: FirebaseAuth, private val firesto
 
     suspend fun deleteUserDocuments(userId: String) {
         // Delete main user document
-        firestore.collection("users").document(userId).delete().await()
+
+            val user = firebaseAuth.currentUser
+
+            user?.let { currentUser ->
+                val userId = currentUser.uid
+
+                // Delete chats where participants include the userId
+                firestore.collection("chats")
+                    .whereArrayContains("participants", userId)
+                    .get()
+                    .addOnSuccessListener { querySnapshot ->
+                        val batch = firestore.batch()
+
+                        for (document in querySnapshot.documents) {
+                            batch.delete(document.reference)
+                        }
+
+                        // Commit batch delete
+                        batch.commit()
+                            .addOnSuccessListener {
+                                // After deleting chats, delete user documents
+                                firestore.collection("users").document(userId).delete()
+                                    .addOnSuccessListener {
+                                        // Finally, delete the authentication user
+                                        currentUser.delete().addOnCompleteListener { task ->
+                                            if (task.isSuccessful) {
+
+                                            } else {
+                                                print(task.exception?.message)
+
+                                            }
+                                        }
+                                    }
+                                    .addOnFailureListener {
+                                        print(it.message)
+                                    }
+                            }
+                            .addOnFailureListener {
+                                print(it.message)
+                            }
+                    }
+                    .addOnFailureListener {
+                        print(it.message)
+                    }
+
+        }
+
+//        firestore.collection("users").document(userId).delete().await()
 
         // Cascade delete subcollections
         val subcollections = listOf("likes", "matches", "messages") // Add your subcollections

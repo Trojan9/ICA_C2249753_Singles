@@ -7,6 +7,8 @@ import com.example.singles.data.entities.MessageEntity
 import com.example.singles.data.repository.chat.ChatRepository
 import com.example.singles.domain.model.Chat
 import com.example.singles.presentation.profile.ProfileViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -43,26 +45,33 @@ class ChatViewModel(private val chatRepository: ChatRepository) : ViewModel() {
             try {
                 _errorMessage.value = null
                 _isLoading.value = true
-
+                _userDetailsCache.value = emptyMap()
+                _chats.value = emptyList()
                 // Fetch all user chats
                 chatRepository.getUserChats(userId!!).collect { chats ->
-                    _chats.value = chats
 
+                        _chats.value =  _chats.value + chats
                     // Fetch other user details for all chats
-                    chats.forEach { chat ->
-                        chatRepository.getChatParticipants(chat.chatId).collect { participants ->
-                            val otherUserId = participants.firstOrNull { it != userId }
-                            otherUserId?.let { userId ->
-                                chatRepository.getUserDetails(userId).collect { userDetails ->
-                                    // Ensure userDetails is not null before adding
-                                    userDetails?.let { nonNullDetails ->
-                                        _userDetailsCache.value =
-                                            _userDetailsCache.value + (chat.chatId to nonNullDetails)
+                    viewModelScope.launch {
+                        val userDetailsList = chats.map { chat ->
+                            async {
+                                val participants = chatRepository.getChatParticipants(chat.chatId).firstOrNull()
+                                val otherUserId = participants?.firstOrNull { it != userId }
+
+                                otherUserId?.let { id ->
+                                    chatRepository.getUserDetails(id).firstOrNull()?.let { userDetails ->
+                                        chat.chatId to userDetails
                                     }
                                 }
                             }
+                        }.awaitAll()
+
+                        // Update cache with non-null results
+                        userDetailsList.filterNotNull().forEach { (chatId, userDetails) ->
+                            _userDetailsCache.value = _userDetailsCache.value + (chatId to userDetails)
                         }
                     }
+                    _isLoading.value = false
                 }
             } catch (e: Exception) {
                 print("this is it 1 $userId $e")

@@ -60,30 +60,30 @@ fun ChatScreen(
             chats.isNotEmpty() -> {
                 // List of Chats
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(chats, key = { it.chatId }) { chat ->
+                    items(chats.distinctBy { it.chatId }, key = { it.chatId }) { chat ->
                         val otherUserDetails = chatViewModel.getCachedOtherUserDetails(chat.chatId)
 
-                        if (otherUserDetails == null) {
-                            // Show loading for user details
-                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
-                            }
-                        } else {
+//                        if (otherUserDetails == null) {
+//                            // Show loading for user details
+////                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+////                                CircularProgressIndicator()
+////                            }
+//                        } else {
                             // Render chat item with fetched details
-                            ChatListItem(
-                                chat = ChatItem(
-                                    name = otherUserDetails["displayName"] as? String ?: "Unknown",
-                                    message = chat.lastMessage,
-                                    chatId = chat.chatId,
-                                    time = formatTimestamp(chat.lastTimestamp),
-                                    imageRes = otherUserDetails["image0"] as? String ?: R.drawable.usermatch
-                                ),
-                                chatViewModel=chatViewModel,
-                                onClick = {
-                                    navController.navigate("chat_detail/${otherUserDetails["displayName"] as? String ?: "Unknown"}/${chat.chatId}")
-                                }
-                            )
-                        }
+                        ChatListItem(
+                            chat = ChatItem(
+                                name = otherUserDetails?.get("displayName") as? String ?: "Deleted Account",
+                                message = chat.lastMessage,
+                                chatId = chat.chatId,
+                                time = formatTimestamp(chat.lastTimestamp),
+                                imageRes = otherUserDetails?.get("image0") as? String ?: R.drawable.usermatch
+                            ),
+                            chatViewModel=chatViewModel,
+                            onClick = {
+                                navController.navigate("chat_detail/${otherUserDetails?.get("displayName") as? String ?: "Deleted Account"}/${chat.chatId}")
+                            }
+                        )
+
                     }
                 }
             }

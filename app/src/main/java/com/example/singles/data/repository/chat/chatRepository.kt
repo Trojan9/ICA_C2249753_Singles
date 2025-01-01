@@ -58,7 +58,6 @@ class ChatRepository(
                 val chats = snapshot?.documents?.mapNotNull { doc ->
                     val participants = doc.get("participants") as? List<String> ?: return@mapNotNull null
                     val otherUserId = participants.firstOrNull { it != userId } ?: return@mapNotNull null
-
                     Chat(
                         chatId = doc.id,
                         lastMessage = doc.getString("lastMessage") ?: "",
@@ -156,19 +155,26 @@ class ChatRepository(
 
     // Observe chat participants in real-time
     fun getChatParticipants(chatId: String): Flow<List<String>> = callbackFlow {
-        val listenerRegistration = chatsCollection.document(chatId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
+       try {
 
-                val participants = snapshot?.get("participants") as? List<String> ?: emptyList()
-                trySend(participants)
-            }
 
-        awaitClose { listenerRegistration.remove() }
+           val listenerRegistration = chatsCollection.document(chatId)
+               .addSnapshotListener { snapshot, error ->
+                   if (error != null) {
 
+                       close(error)
+                       return@addSnapshotListener
+                   }
+
+                   val participants = snapshot?.get("participants") as? List<String> ?: emptyList()
+                   trySend(participants)
+               }
+
+           awaitClose { listenerRegistration.remove() }
+       }catch (e: Exception) {
+           print("outer $e")
+
+       }
 
     }
 
@@ -248,8 +254,8 @@ class ChatRepository(
         val participants = chat.get("participants") as List<String>
         val recipientId = participants.firstOrNull { it != senderId }
 
-        return recipientId?.let { userId ->
-            firestore.collection("users").document(userId).get().await()
+        return recipientId?.let {
+            firestore.collection("users").document(it).get().await()
                 .getString("fcmToken") // Ensure the token is stored under "fcmToken"
         }
     }

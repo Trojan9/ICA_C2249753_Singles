@@ -27,9 +27,12 @@ fun bottomNavigation(navController: NavController, profileViewModel: ProfileView
         bottomBar = {
             BottomNavigationBar(
                 selectedTab = selectedTab,
+
                 onTabSelected = { tab ->
                     selectedTab = tab
-                }
+                },
+                profileViewModel= profileViewModel,
+                chatViewModel = chatViewModel
             )
         }
     ) { innerPadding ->
@@ -55,7 +58,9 @@ fun bottomNavigation(navController: NavController, profileViewModel: ProfileView
 @Composable
 fun BottomNavigationBar(
     selectedTab: String,
-    onTabSelected: (String) -> Unit
+    onTabSelected: (String) -> Unit,
+    profileViewModel: ProfileViewModel,
+    chatViewModel: ChatViewModel
 ) {
     val items = listOf("Nearby", "Likes", "Chats", "Profile")
 
@@ -66,7 +71,12 @@ fun BottomNavigationBar(
         items.forEach { item ->
             NavigationBarItem(
                 selected = selectedTab == item,
-                onClick = { onTabSelected(item) },
+                onClick = {
+                    profileViewModel.stopLoader()
+                    onTabSelected(item)
+                        chatViewModel.fetchUserChats(profileViewModel= profileViewModel) // Fetch user's chats on launch
+
+                          },
                 icon = {
                     when (item) {
                         "Nearby" -> Icon(Icons.Filled.LocationOn, contentDescription = "Nearby", tint = if (selectedTab == item) Color(0xFFFBB296) else Color.Gray)

@@ -12,7 +12,6 @@ plugins {
 android {
     namespace = "com.example.singles"
     compileSdk = 34
-
     defaultConfig {
         applicationId = "com.example.singles"
         multiDexEnabled = true
