@@ -16,6 +16,31 @@
       "api_key": [
         {
           "current_key": "AIzaSyCMNGqdcq7daszLXShb3XZNlyRA-JwbtHg"
+        },
+        {
+          "current_key": "AIzaSyA8Z1RbcE3n-B6V0qVQFCrBOmFdQ3F3cYU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:258154818400:android:0f1794752e5910dbcacc05",
+        "android_client_info": {
+          "package_name": "uk.ac.tees.mad.c2249753"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMNGqdcq7daszLXShb3XZNlyRA-JwbtHg"
+        },
+        {
+          "current_key": "AIzaSyA8Z1RbcE3n-B6V0qVQFCrBOmFdQ3F3cYU"
         }
       ],
       "services": {

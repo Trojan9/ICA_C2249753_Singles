@@ -33,6 +33,35 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:989670190561:android:ea8f67141a292c58cf76a0",
+        "android_client_info": {
+          "package_name": "uk.ac.tees.mad.c2249753"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "989670190561-cg76shi882hc9ifdaok21lam87dn7ori.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrXl-WGjwivIKdXERmh22xPiglZOfvXOc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "989670190561-aqdmu2lld4bvsiuqgrmh4pgskdk93sie.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

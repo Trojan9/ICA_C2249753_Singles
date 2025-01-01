@@ -10,10 +10,10 @@ plugins {
 }
 
 android {
-    namespace = "com.example.singles"
+    namespace = "uk.ac.tees.mad.c2249753"
     compileSdk = 34
     defaultConfig {
-        applicationId = "com.example.singles"
+        applicationId = "uk.ac.tees.mad.c2249753"
         multiDexEnabled = true
         minSdk = 24
         targetSdk = 34
